@@ -462,36 +462,17 @@ rd_kafka_assignor_rebalance_protocol_check(const rd_kafka_conf_t *conf) {
 /**
  * @brief Add an assignor.
  */
-rd_kafka_resp_err_t rd_kafka_assignor_add(
-    rd_kafka_t *rk,
-    const char *protocol_type,
-    const char *protocol_name,
-    rd_kafka_rebalance_protocol_t rebalance_protocol,
-    rd_kafka_resp_err_t (*assign_cb)(
-        rd_kafka_t *rk,
-        const struct rd_kafka_assignor_s *rkas,
-        const char *member_id,
-        const rd_kafka_metadata_t *metadata,
-        rd_kafka_group_member_t *members,
-        size_t member_cnt,
-        rd_kafka_assignor_topic_t **eligible_topics,
-        size_t eligible_topic_cnt,
-        char *errstr,
-        size_t errstr_size,
-        void *opaque),
-    rd_kafkap_bytes_t *(*get_metadata_cb)(
-        const struct rd_kafka_assignor_s *rkas,
-        void *assignor_state,
-        const rd_list_t *topics,
-        const rd_kafka_topic_partition_list_t *owned_partitions),
-    void (*on_assignment_cb)(const struct rd_kafka_assignor_s *rkas,
-                             void **assignor_state,
-                             const rd_kafka_topic_partition_list_t *assignment,
-                             const rd_kafkap_bytes_t *userdata,
-                             const rd_kafka_consumer_group_metadata_t *rkcgm),
-    void (*destroy_state_cb)(void *assignor_state),
-    int (*unittest_cb)(void),
-    void *opaque) {
+rd_kafka_resp_err_t
+rd_kafka_assignor_add(rd_kafka_t *rk,
+                      const char *protocol_type,
+                      const char *protocol_name,
+                      rd_kafka_rebalance_protocol_t rebalance_protocol,
+                      rd_kafka_assignor_assign_cb_t assign_cb,
+                      rkas_get_metadata_cb_t get_metadata_cb,
+                      rkas_on_assignment_cb_t on_assignment_cb,
+                      rkas_destroy_state_cb_t destroy_state_cb,
+                      int (*unittest_cb)(void),
+                      void *opaque) {
         rd_kafka_assignor_t *rkas;
 
         if (rd_kafkap_str_cmp_str(rk->rk_conf.group_protocol_type,
