@@ -128,10 +128,10 @@ rd_kafka_range_assignor_assign_cb(rd_kafka_t *rk,
 /**
  * @brief Initialzie and add range assignor.
  */
-rd_kafka_resp_err_t rd_kafka_range_assignor_init(rd_kafka_t *rk) {
-        return rd_kafka_assignor_add(
-            rk, "consumer", "range", RD_KAFKA_REBALANCE_PROTOCOL_EAGER,
+rd_kafka_resp_err_t rd_kafka_range_assignor_register(void) {
+        return rd_kafka_assignor_register(
+            "range", RD_KAFKA_REBALANCE_PROTOCOL_EAGER,
             rd_kafka_range_assignor_assign_cb,
             rd_kafka_assignor_get_metadata_with_empty_userdata, NULL, NULL,
-            NULL, NULL);
+            NULL);
 }

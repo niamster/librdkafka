@@ -29,6 +29,7 @@
 #define _RDKAFKA_ASSIGNOR_H_
 
 
+void rd_kafka_assignor_global_init(void);
 
 /*!
  * Enumerates the different rebalance protocol types.
@@ -166,6 +167,27 @@ struct rd_kafka_assignor_s {
         void *rkas_opaque;
 };
 
+/**
+ * Register new assignor
+ */
+rd_kafka_resp_err_t
+rd_kafka_assignor_register(const char *protocol_name,
+                           rd_kafka_rebalance_protocol_t rebalance_protocol,
+                           rd_kafka_assignor_assign_cb_t assign_cb,
+                           rkas_get_metadata_cb_t get_metadata_cb,
+                           rkas_on_assignment_cb_t on_assignment_cb,
+                           rkas_destroy_state_cb_t destroy_state_cb,
+                           void *opaque);
+rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
+    const char *protocol_name,
+    rd_kafka_rebalance_protocol_t rebalance_protocol,
+    rd_kafka_assignor_assign_cb_t assign_cb,
+    rkas_get_metadata_cb_t get_metadata_cb,
+    rkas_on_assignment_cb_t on_assignment_cb,
+    rkas_destroy_state_cb_t destroy_state_cb,
+    int (*unittest_cb)(void),
+    void *opaque);
+
 
 rd_kafka_resp_err_t
 rd_kafka_assignor_add(rd_kafka_t *rk,
@@ -216,8 +238,8 @@ void rd_kafka_assignors_term(rd_kafka_t *rk);
 void rd_kafka_group_member_clear(rd_kafka_group_member_t *rkgm);
 
 
-rd_kafka_resp_err_t rd_kafka_range_assignor_init(rd_kafka_t *rk);
-rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_init(rd_kafka_t *rk);
-rd_kafka_resp_err_t rd_kafka_sticky_assignor_init(rd_kafka_t *rk);
+rd_kafka_resp_err_t rd_kafka_range_assignor_register(void);
+rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_register(void);
+rd_kafka_resp_err_t rd_kafka_sticky_assignor_register(void);
 
 #endif /* _RDKAFKA_ASSIGNOR_H_ */

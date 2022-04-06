@@ -32,6 +32,22 @@
 
 #include <ctype.h>
 
+static mtx_t rd_kafka_assignor_global_registry_lock;
+static rd_list_t rd_kafka_assignor_global_registry;
+
+
+/**
+ * @brief Initialize assignor registry
+ */
+void rd_kafka_assignor_global_init(void) {
+        mtx_init(&rd_kafka_assignor_global_registry_lock, mtx_plain);
+        rd_list_init(&rd_kafka_assignor_global_registry, 0, NULL);
+
+        rd_kafka_range_assignor_register();
+        rd_kafka_roundrobin_assignor_register();
+        rd_kafka_sticky_assignor_register();
+}
+
 /**
  * Clear out and free any memory used by the member, but not the rkgm itself.
  */
@@ -519,6 +535,22 @@ static void rtrim(char *s) {
 }
 
 
+/* Initialize builtin assignors (ignore errors) */
+static void rd_kafka_assignors_init_registered(rd_kafka_t *rk) {
+        rd_kafka_assignor_t *rkas;
+        int i;
+
+        RD_LIST_FOREACH(rkas, &rd_kafka_assignor_global_registry, i) {
+                rd_kafka_assignor_add(
+                    rk, rkas->rkas_protocol_type->str,
+                    rkas->rkas_protocol_name->str, rkas->rkas_protocol,
+                    rkas->rkas_assign_cb, rkas->rkas_get_metadata_cb,
+                    rkas->rkas_on_assignment_cb, rkas->rkas_destroy_state_cb,
+                    rkas->rkas_unittest, rkas->rkas_opaque);
+        }
+}
+
+
 /**
  * Initialize assignor list based on configuration.
  */
@@ -529,10 +561,7 @@ int rd_kafka_assignors_init(rd_kafka_t *rk, char *errstr, size_t errstr_size) {
         rd_list_init(&rk->rk_conf.partition_assignors, 3,
                      (void *)rd_kafka_assignor_destroy);
 
-        /* Initialize builtin assignors (ignore errors) */
-        rd_kafka_range_assignor_init(rk);
-        rd_kafka_roundrobin_assignor_init(rk);
-        rd_kafka_sticky_assignor_init(rk);
+        rd_kafka_assignors_init_registered(rk);
 
         rd_strdupa(&wanted, rk->rk_conf.partition_assignment_strategy);
 
@@ -595,6 +624,61 @@ void rd_kafka_assignors_term(rd_kafka_t *rk) {
 }
 
 
+rd_kafka_resp_err_t
+rd_kafka_assignor_register(const char *protocol_name,
+                           rd_kafka_rebalance_protocol_t rebalance_protocol,
+                           rd_kafka_assignor_assign_cb_t assign_cb,
+                           rkas_get_metadata_cb_t get_metadata_cb,
+                           rkas_on_assignment_cb_t on_assignment_cb,
+                           rkas_destroy_state_cb_t destroy_state_cb,
+                           void *opaque) {
+        return rd_kafka_assignor_register_internal(
+            protocol_name, rebalance_protocol, assign_cb, get_metadata_cb,
+            on_assignment_cb, destroy_state_cb, NULL, opaque);
+}
+
+
+rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
+    const char *protocol_name,
+    rd_kafka_rebalance_protocol_t rebalance_protocol,
+    rd_kafka_assignor_assign_cb_t assign_cb,
+    rkas_get_metadata_cb_t get_metadata_cb,
+    rkas_on_assignment_cb_t on_assignment_cb,
+    rkas_destroy_state_cb_t destroy_state_cb,
+    int (*unittest_cb)(void),
+    void *opaque) {
+        if (rebalance_protocol != RD_KAFKA_REBALANCE_PROTOCOL_COOPERATIVE &&
+            rebalance_protocol != RD_KAFKA_REBALANCE_PROTOCOL_EAGER)
+                return RD_KAFKA_RESP_ERR__UNKNOWN_PROTOCOL;
+
+        mtx_lock(&rd_kafka_assignor_global_registry_lock);
+
+        if ((rd_list_find(&rd_kafka_assignor_global_registry, protocol_name,
+                          rd_kafka_assignor_cmp_str))) {
+                mtx_unlock(&rd_kafka_assignor_global_registry_lock);
+                return RD_KAFKA_RESP_ERR__CONFLICT;
+        }
+
+        rd_kafka_assignor_t *rkas;
+
+        rkas = rd_calloc(1, sizeof(*rkas));
+
+        rkas->rkas_protocol_name    = rd_kafkap_str_new(protocol_name, -1);
+        rkas->rkas_protocol_type    = rd_kafkap_str_new("consumer", -1);
+        rkas->rkas_protocol         = rebalance_protocol;
+        rkas->rkas_assign_cb        = assign_cb;
+        rkas->rkas_get_metadata_cb  = get_metadata_cb;
+        rkas->rkas_on_assignment_cb = on_assignment_cb;
+        rkas->rkas_destroy_state_cb = destroy_state_cb;
+        rkas->rkas_unittest         = unittest_cb;
+        rkas->rkas_opaque           = opaque;
+
+        rd_list_add(&rd_kafka_assignor_global_registry, rkas);
+
+        mtx_unlock(&rd_kafka_assignor_global_registry_lock);
+
+        return RD_KAFKA_RESP_ERR_NO_ERROR;
+}
 
 /**
  * @brief Unittest for assignors
