@@ -1578,7 +1578,7 @@ static void assignToMembers(map_str_toppar_list_t *currentAssignment,
  */
 rd_kafka_resp_err_t
 rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
-                                   const rd_kafka_assignor_t *rkas,
+                                   void *opaque,
                                    const char *member_id,
                                    const rd_kafka_metadata_t *metadata,
                                    rd_kafka_group_member_t *members,
@@ -1812,7 +1812,7 @@ rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
 
 /** @brief FIXME docstring */
 static void rd_kafka_sticky_assignor_on_assignment_cb(
-    const rd_kafka_assignor_t *rkas,
+    void *opaque,
     void **assignor_state,
     const rd_kafka_topic_partition_list_t *partitions,
     const rd_kafkap_bytes_t *assignment_userdata,
@@ -1833,7 +1833,7 @@ static void rd_kafka_sticky_assignor_on_assignment_cb(
 
 /** @brief FIXME docstring */
 static rd_kafkap_bytes_t *rd_kafka_sticky_assignor_get_metadata(
-    const rd_kafka_assignor_t *rkas,
+    void *opaque,
     void *assignor_state,
     const rd_list_t *topics,
     const rd_kafka_topic_partition_list_t *owned_partitions) {

@@ -1522,8 +1522,8 @@ done:
                         rkcg->rkcg_generation_id, member_id,
                         rkcg->rkcg_rk->rk_conf.group_instance_id);
                 rkcg->rkcg_assignor->rkas_on_assignment_cb(
-                    rkcg->rkcg_assignor, &(rkcg->rkcg_assignor_state),
-                    assignment, &UserData, cgmd);
+                    rkcg->rkcg_assignor->rkas_opaque,
+                    &(rkcg->rkcg_assignor_state), assignment, &UserData, cgmd);
                 rd_kafka_consumer_group_metadata_destroy(cgmd);
         }
 

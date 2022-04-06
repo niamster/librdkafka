@@ -181,7 +181,7 @@ rd_kafkap_bytes_t *rd_kafka_consumer_protocol_member_metadata_new(
 
 
 rd_kafkap_bytes_t *rd_kafka_assignor_get_metadata_with_empty_userdata(
-    const rd_kafka_assignor_t *rkas,
+    void *opaque,
     void *assignor_state,
     const rd_list_t *topics,
     const rd_kafka_topic_partition_list_t *owned_partitions) {
@@ -367,8 +367,9 @@ rd_kafka_resp_err_t rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
 
         /* Call assignors assign callback */
         err = rkas->rkas_assign_cb(
-            rkcg->rkcg_rk, rkas, rkcg->rkcg_member_id->str, metadata, members,
-            member_cnt, (rd_kafka_assignor_topic_t **)eligible_topics.rl_elems,
+            rkcg->rkcg_rk, rkas->rkas_opaque, rkcg->rkcg_member_id->str,
+            metadata, members, member_cnt,
+            (rd_kafka_assignor_topic_t **)eligible_topics.rl_elems,
             eligible_topics.rl_cnt, errstr, errstr_size);
 
         if (err) {

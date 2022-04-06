@@ -93,13 +93,6 @@ typedef struct rd_kafka_assignor_topic_s {
 int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
 
 /**
- * Forward declaration of the assignor struct for callbacks
- */
-struct rd_kafka_assignor_s;
-typedef struct rd_kafka_assignor_s rd_kafka_assignor_t;
-
-
-/**
  * Assignor callbacks
  */
 
@@ -110,7 +103,7 @@ typedef struct rd_kafka_assignor_s rd_kafka_assignor_t;
  */
 typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
     rd_kafka_t *rk,
-    const rd_kafka_assignor_t *rkas,
+    void *opaque,
     const char *member_id,
     const rd_kafka_metadata_t *metadata,
     rd_kafka_group_member_t *members,
@@ -125,7 +118,7 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
  * See also `rd_kafka_consumer_protocol_member_metadata_new`.
  */
 typedef rd_kafkap_bytes_t *(*rkas_get_metadata_cb_t)(
-    const rd_kafka_assignor_t *rkas,
+    void *opaque,
     void *assignor_state,
     const rd_list_t *topics,
     const rd_kafka_topic_partition_list_t *owned_partitions);
@@ -136,7 +129,7 @@ typedef rd_kafkap_bytes_t *(*rkas_get_metadata_cb_t)(
  * assignment from the leader.
  */
 typedef void (*rkas_on_assignment_cb_t)(
-    const rd_kafka_assignor_t *rkas,
+    void *opaque,
     void **assignor_state,
     const rd_kafka_topic_partition_list_t *assignment,
     const rd_kafkap_bytes_t *assignment_userdata,
@@ -149,7 +142,7 @@ typedef void (*rkas_on_assignment_cb_t)(
 typedef void (*rkas_destroy_state_cb_t)(void *assignor_state);
 
 
-struct rd_kafka_assignor_s {
+typedef struct rd_kafka_assignor_s {
         rd_kafkap_str_t *rkas_protocol_type;
         rd_kafkap_str_t *rkas_protocol_name;
 
@@ -165,7 +158,7 @@ struct rd_kafka_assignor_s {
         int (*rkas_unittest)(void);
 
         void *rkas_opaque;
-};
+} rd_kafka_assignor_t;
 
 /**
  * Register new assignor
@@ -208,7 +201,7 @@ rd_kafkap_bytes_t *rd_kafka_consumer_protocol_member_metadata_new(
     const rd_kafka_topic_partition_list_t *owned_partitions);
 
 rd_kafkap_bytes_t *rd_kafka_assignor_get_metadata_with_empty_userdata(
-    const rd_kafka_assignor_t *rkas,
+    void *opaque,
     void *assignor_state,
     const rd_list_t *topics,
     const rd_kafka_topic_partition_list_t *owned_partitions);
