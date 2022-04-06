@@ -117,8 +117,7 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
     rd_kafka_assignor_topic_t **eligible_topics,
     size_t eligible_topic_cnt,
     char *errstr,
-    size_t errstr_size,
-    void *opaque);
+    size_t errstr_size);
 
 /**
  * @brief rkas_get_metadata_cb_t returns serialized member metadata.

@@ -60,8 +60,7 @@ rd_kafka_range_assignor_assign_cb(rd_kafka_t *rk,
                                   rd_kafka_assignor_topic_t **eligible_topics,
                                   size_t eligible_topic_cnt,
                                   char *errstr,
-                                  size_t errstr_size,
-                                  void *opaque) {
+                                  size_t errstr_size) {
         unsigned int ti;
         int i;
 

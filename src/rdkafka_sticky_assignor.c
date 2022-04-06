@@ -1586,8 +1586,7 @@ rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
                                    rd_kafka_assignor_topic_t **eligible_topics,
                                    size_t eligible_topic_cnt,
                                    char *errstr,
-                                   size_t errstr_size,
-                                   void *opaque) {
+                                   size_t errstr_size) {
         /* FIXME: Let the cgrp pass the actual eligible partition count */
         size_t partition_cnt = member_cnt * 10; /* FIXME */
 

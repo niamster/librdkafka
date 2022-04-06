@@ -353,7 +353,7 @@ rd_kafka_resp_err_t rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
         err = rkas->rkas_assign_cb(
             rkcg->rkcg_rk, rkas, rkcg->rkcg_member_id->str, metadata, members,
             member_cnt, (rd_kafka_assignor_topic_t **)eligible_topics.rl_elems,
-            eligible_topics.rl_cnt, errstr, errstr_size, rkas->rkas_opaque);
+            eligible_topics.rl_cnt, errstr, errstr_size);
 
         if (err) {
                 rd_kafka_dbg(

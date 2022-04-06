@@ -59,8 +59,7 @@ rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_assign_cb(
     rd_kafka_assignor_topic_t **eligible_topics,
     size_t eligible_topic_cnt,
     char *errstr,
-    size_t errstr_size,
-    void *opaque) {
+    size_t errstr_size) {
         unsigned int ti;
         int next = -1; /* Next member id */
 
