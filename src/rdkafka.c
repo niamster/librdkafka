@@ -4380,7 +4380,7 @@ const char *rd_kafka_version_str(void) {
         if (*LIBRDKAFKA_GIT_VERSION) {
                 of = rd_snprintf(ret, sizeof(ret), "%s",
                                  *LIBRDKAFKA_GIT_VERSION == 'v'
-                                     ? LIBRDKAFKA_GIT_VERSION + 1
+                                     ? &LIBRDKAFKA_GIT_VERSION[1]
                                      : LIBRDKAFKA_GIT_VERSION);
                 if (of > sizeof(ret))
                         of = sizeof(ret);
