@@ -57,47 +57,49 @@ rd_kafka_range_assignor_assign_cb(rd_kafka_t *rk,
                                   const rd_kafka_metadata_t *metadata,
                                   rd_kafka_group_member_t *members,
                                   size_t member_cnt,
-                                  rd_kafka_assignor_topic_t **eligible_topics,
+                                  rd_kafka_assignor_topic_t *eligible_topics,
                                   size_t eligible_topic_cnt,
                                   char *errstr,
                                   size_t errstr_size) {
         unsigned int ti;
-        int i;
+        unsigned int i;
 
         /* The range assignor works on a per-topic basis. */
         for (ti = 0; ti < eligible_topic_cnt; ti++) {
-                rd_kafka_assignor_topic_t *eligible_topic = eligible_topics[ti];
-                int numPartitionsPerConsumer;
-                int consumersWithExtraPartition;
+                rd_kafka_assignor_topic_t *eligible_topic =
+                    &eligible_topics[ti];
+                unsigned int numPartitionsPerConsumer;
+                unsigned int consumersWithExtraPartition;
 
                 /* For each topic, we lay out the available partitions in
                  * numeric order and the consumers in lexicographic order. */
-                rd_list_sort(&eligible_topic->members,
-                             rd_kafka_group_member_cmp);
+                qsort(eligible_topic->members, eligible_topic->member_cnt,
+                      sizeof(*eligible_topic->members),
+                      rd_kafka_group_member_cmp);
 
                 /* We then divide the number of partitions by the total number
                  * of consumers to determine the number of partitions to assign
                  * to each consumer. */
                 numPartitionsPerConsumer =
                     eligible_topic->metadata->partition_cnt /
-                    rd_list_cnt(&eligible_topic->members);
+                    eligible_topic->member_cnt;
 
                 /* If it does not evenly divide, then the first few consumers
                  * will have one extra partition. */
                 consumersWithExtraPartition =
                     eligible_topic->metadata->partition_cnt %
-                    rd_list_cnt(&eligible_topic->members);
+                    eligible_topic->member_cnt;
 
                 rd_kafka_dbg(rk, CGRP, "ASSIGN",
                              "range: Topic %s with %d partition(s) and "
-                             "%d subscribing member(s)",
+                             "%zu subscribing member(s)",
                              eligible_topic->metadata->topic,
                              eligible_topic->metadata->partition_cnt,
-                             rd_list_cnt(&eligible_topic->members));
+                             eligible_topic->member_cnt);
 
-                for (i = 0; i < rd_list_cnt(&eligible_topic->members); i++) {
+                for (i = 0; i < eligible_topic->member_cnt; i++) {
                         rd_kafka_group_member_t *rkgm =
-                            rd_list_elem(&eligible_topic->members, i);
+                            &eligible_topic->members[i];
                         int start = numPartitionsPerConsumer * i +
                                     RD_MIN(i, consumersWithExtraPartition);
                         int length =

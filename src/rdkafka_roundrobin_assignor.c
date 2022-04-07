@@ -56,7 +56,7 @@ rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_assign_cb(
     const rd_kafka_metadata_t *metadata,
     rd_kafka_group_member_t *members,
     size_t member_cnt,
-    rd_kafka_assignor_topic_t **eligible_topics,
+    rd_kafka_assignor_topic_t *eligible_topics,
     size_t eligible_topic_cnt,
     char *errstr,
     size_t errstr_size) {
@@ -64,14 +64,15 @@ rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_assign_cb(
         int next = -1; /* Next member id */
 
         /* Sort topics by name */
-        qsort(eligible_topics, eligible_topic_cnt, sizeof(*eligible_topics),
-              rd_kafka_assignor_topic_cmp);
+        qsort(eligible_topics, eligible_topic_cnt,
+              sizeof(rd_kafka_assignor_topic_t), rd_kafka_assignor_topic_cmp);
 
         /* Sort members by name */
         qsort(members, member_cnt, sizeof(*members), rd_kafka_group_member_cmp);
 
         for (ti = 0; ti < eligible_topic_cnt; ti++) {
-                rd_kafka_assignor_topic_t *eligible_topic = eligible_topics[ti];
+                rd_kafka_assignor_topic_t *eligible_topic =
+                    &eligible_topics[ti];
                 int partition;
 
                 /* For each topic+partition, assign one member (in a cyclic

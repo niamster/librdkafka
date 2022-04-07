@@ -1252,8 +1252,7 @@ populatePotentialMaps(const rd_kafka_assignor_topic_t *atopic,
                       map_toppar_list_t *partition2AllPotentialConsumers,
                       map_str_toppar_list_t *consumer2AllPotentialPartitions,
                       size_t estimated_partition_cnt) {
-        int i;
-        const rd_kafka_group_member_t *rkgm;
+        size_t i;
 
         /* for each eligible (subscribed and available) topic (\p atopic):
          *   for each member subscribing to that topic:
@@ -1263,8 +1262,9 @@ populatePotentialMaps(const rd_kafka_assignor_topic_t *atopic,
          *          consumer2AllPotentialPartitions
          */
 
-        RD_LIST_FOREACH(rkgm, &atopic->members, i) {
-                const char *consumer = rkgm->rkgm_member_id->str;
+        for (i = 0; i < atopic->member_cnt; i++) {
+                const rd_kafka_group_member_t *rkgm = &atopic->members[i];
+                const char *consumer                = rkgm->rkgm_member_id->str;
                 rd_kafka_topic_partition_list_t *partitions =
                     RD_MAP_GET(consumer2AllPotentialPartitions, consumer);
                 int j;
@@ -1583,7 +1583,7 @@ rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
                                    const rd_kafka_metadata_t *metadata,
                                    rd_kafka_group_member_t *members,
                                    size_t member_cnt,
-                                   rd_kafka_assignor_topic_t **eligible_topics,
+                                   rd_kafka_assignor_topic_t *eligible_topics,
                                    size_t eligible_topic_cnt,
                                    char *errstr,
                                    size_t errstr_size) {
@@ -1664,7 +1664,7 @@ rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
          * consumer2AllPotentialPartitions maps by each eligible topic. */
         for (i = 0; i < (int)eligible_topic_cnt; i++)
                 populatePotentialMaps(
-                    eligible_topics[i], &partition2AllPotentialConsumers,
+                    &eligible_topics[i], &partition2AllPotentialConsumers,
                     &consumer2AllPotentialPartitions, partition_cnt);
 
 

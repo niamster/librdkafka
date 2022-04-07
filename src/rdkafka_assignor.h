@@ -86,11 +86,22 @@ int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
  */
 typedef struct rd_kafka_assignor_topic_s {
         const rd_kafka_metadata_topic_t *metadata;
-        rd_list_t members; /* rd_kafka_group_member_t * */
+        rd_kafka_group_member_t *members;
+        size_t member_cnt;
 } rd_kafka_assignor_topic_t;
 
-
 int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
+
+/**
+ * Internal view of rd_kafka_assignor_topic_t
+ */
+typedef struct rd_kafka_assignor_topic_internal_s {
+        const rd_kafka_metadata_topic_t *metadata;
+        rd_list_t members; /* rd_kafka_group_member_t * */
+} rd_kafka_assignor_topic_internal_t;
+
+
+int rd_kafka_assignor_topic_internal_cmp(const void *_a, const void *_b);
 
 /**
  * Assignor callbacks
@@ -108,7 +119,9 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
     const rd_kafka_metadata_t *metadata,
     rd_kafka_group_member_t *members,
     size_t member_cnt,
-    rd_kafka_assignor_topic_t **eligible_topics,
+    // The callback is free manipulating `eligible_topics` in any way,
+    // it is not used by the caller but the resources are destroyed afterwards.
+    rd_kafka_assignor_topic_t *eligible_topics,
     size_t eligible_topic_cnt,
     char *errstr,
     size_t errstr_size);
