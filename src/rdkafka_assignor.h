@@ -167,9 +167,6 @@ rd_kafka_resp_err_t
 rd_kafka_assignor_register(const char *protocol_name,
                            rd_kafka_rebalance_protocol_t rebalance_protocol,
                            rd_kafka_assignor_assign_cb_t assign_cb,
-                           rkas_get_metadata_cb_t get_metadata_cb,
-                           rkas_on_assignment_cb_t on_assignment_cb,
-                           rkas_destroy_state_cb_t destroy_state_cb,
                            void *opaque);
 rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
     const char *protocol_name,
