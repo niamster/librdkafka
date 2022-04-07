@@ -3134,7 +3134,7 @@ int rd_kafka_topic_partition_list_del(
  * On match, if rktpar is a regex pattern then 'matched_by_regex' is set to 1.
  */
 int rd_kafka_topic_partition_match(rd_kafka_t *rk,
-                                   const rd_kafka_group_member_t *rkgm,
+                                   const rd_kafka_group_member_internal_t *rkgm,
                                    const rd_kafka_topic_partition_t *rktpar,
                                    const char *topic,
                                    int *matched_by_regex) {

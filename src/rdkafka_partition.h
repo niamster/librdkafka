@@ -231,12 +231,13 @@ struct rd_kafka_toppar_s {                           /* rd_kafka_toppar_t */
         int32_t rktp_fetch_version; /* Op version of curr fetch.
                                        (broker thread) */
 
-        enum { RD_KAFKA_TOPPAR_FETCH_NONE = 0,
-               RD_KAFKA_TOPPAR_FETCH_STOPPING,
-               RD_KAFKA_TOPPAR_FETCH_STOPPED,
-               RD_KAFKA_TOPPAR_FETCH_OFFSET_QUERY,
-               RD_KAFKA_TOPPAR_FETCH_OFFSET_WAIT,
-               RD_KAFKA_TOPPAR_FETCH_ACTIVE,
+        enum {
+                RD_KAFKA_TOPPAR_FETCH_NONE = 0,
+                RD_KAFKA_TOPPAR_FETCH_STOPPING,
+                RD_KAFKA_TOPPAR_FETCH_STOPPED,
+                RD_KAFKA_TOPPAR_FETCH_OFFSET_QUERY,
+                RD_KAFKA_TOPPAR_FETCH_OFFSET_WAIT,
+                RD_KAFKA_TOPPAR_FETCH_ACTIVE,
         } rktp_fetch_state; /* Broker thread's state */
 
 #define RD_KAFKA_TOPPAR_FETCH_IS_STARTED(fetch_state)                          \
@@ -621,7 +622,7 @@ void rd_kafka_topic_partition_list_add_list(
              (RKTPAR) >= &(TPLIST)->elems[0]; RKTPAR--)
 
 int rd_kafka_topic_partition_match(rd_kafka_t *rk,
-                                   const rd_kafka_group_member_t *rkgm,
+                                   const rd_kafka_group_member_internal_t *rkgm,
                                    const rd_kafka_topic_partition_t *rktpar,
                                    const char *topic,
                                    int *matched_by_regex);

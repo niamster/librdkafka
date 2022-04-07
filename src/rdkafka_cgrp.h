@@ -117,7 +117,7 @@ typedef struct rd_kafka_cgrp_s {
 
         /* State when group leader */
         struct {
-                rd_kafka_group_member_t *members;
+                rd_kafka_group_member_internal_t *members;
                 int member_cnt;
         } rkcg_group_leader;
 

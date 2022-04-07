@@ -54,7 +54,7 @@ rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_assign_cb(
     void *opaque,
     const char *member_id,
     const rd_kafka_metadata_t *metadata,
-    rd_kafka_group_member_t *members,
+    rd_kafka_group_member_internal_t *members,
     size_t member_cnt,
     rd_kafka_assignor_topic_t *eligible_topics,
     size_t eligible_topic_cnt,
@@ -68,7 +68,8 @@ rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_assign_cb(
               sizeof(rd_kafka_assignor_topic_t), rd_kafka_assignor_topic_cmp);
 
         /* Sort members by name */
-        qsort(members, member_cnt, sizeof(*members), rd_kafka_group_member_cmp);
+        qsort(members, member_cnt, sizeof(*members),
+              rd_kafka_group_member_internal_cmp);
 
         for (ti = 0; ti < eligible_topic_cnt; ti++) {
                 rd_kafka_assignor_topic_t *eligible_topic =
@@ -80,15 +81,16 @@ rd_kafka_resp_err_t rd_kafka_roundrobin_assignor_assign_cb(
                 for (partition = 0;
                      partition < eligible_topic->metadata->partition_cnt;
                      partition++) {
-                        rd_kafka_group_member_t *rkgm;
+                        rd_kafka_group_member_internal_t *rkgm;
 
                         /* Scan through members until we find one with a
                          * subscription to this topic. */
                         do {
                                 next = (next + 1) % member_cnt;
-                        } while (!rd_kafka_group_member_find_subscription(
-                            rk, &members[next],
-                            eligible_topic->metadata->topic));
+                        } while (
+                            !rd_kafka_group_member_internal_find_subscription(
+                                rk, &members[next],
+                                eligible_topic->metadata->topic));
 
                         rkgm = &members[next];
 

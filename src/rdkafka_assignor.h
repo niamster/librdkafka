@@ -45,9 +45,7 @@ typedef enum rd_kafka_rebalance_protocol_t {
                                                      rebalance protocol*/
 } rd_kafka_rebalance_protocol_t;
 
-
-
-typedef struct rd_kafka_group_member_s {
+typedef struct rd_kafka_group_member_internal_s {
         /** Subscribed topics (partition field is ignored). */
         rd_kafka_topic_partition_list_t *rkgm_subscription;
         /** Partitions assigned to this member after running the assignor.
@@ -70,14 +68,14 @@ typedef struct rd_kafka_group_member_s {
         rd_kafkap_bytes_t *rkgm_member_metadata;
         /** Group generation id. */
         int rkgm_generation;
-} rd_kafka_group_member_t;
+} rd_kafka_group_member_internal_t;
 
+int rd_kafka_group_member_internal_cmp(const void *_a, const void *_b);
 
-int rd_kafka_group_member_cmp(const void *_a, const void *_b);
-
-int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
-                                            const rd_kafka_group_member_t *rkgm,
-                                            const char *topic);
+int rd_kafka_group_member_internal_find_subscription(
+    rd_kafka_t *rk,
+    const rd_kafka_group_member_internal_t *rkgm,
+    const char *topic);
 
 
 /**
@@ -86,7 +84,7 @@ int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
  */
 typedef struct rd_kafka_assignor_topic_s {
         const rd_kafka_metadata_topic_t *metadata;
-        rd_kafka_group_member_t *members;
+        rd_kafka_group_member_internal_t *members;
         size_t member_cnt;
 } rd_kafka_assignor_topic_t;
 
@@ -97,7 +95,7 @@ int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
  */
 typedef struct rd_kafka_assignor_topic_internal_s {
         const rd_kafka_metadata_topic_t *metadata;
-        rd_list_t members; /* rd_kafka_group_member_t * */
+        rd_list_t members; /* rd_kafka_group_member_internal_t * */
 } rd_kafka_assignor_topic_internal_t;
 
 
@@ -117,7 +115,7 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
     void *opaque,
     const char *member_id,
     const rd_kafka_metadata_t *metadata,
-    rd_kafka_group_member_t *members,
+    rd_kafka_group_member_internal_t *members,
     size_t member_cnt,
     // The callback is free manipulating `eligible_topics` in any way,
     // it is not used by the caller but the resources are destroyed afterwards.
@@ -222,13 +220,14 @@ void rd_kafka_assignor_update_subscription(
     const rd_kafka_topic_partition_list_t *subscription);
 
 
-rd_kafka_resp_err_t rd_kafka_assignor_run(struct rd_kafka_cgrp_s *rkcg,
-                                          const rd_kafka_assignor_t *rkas,
-                                          rd_kafka_metadata_t *metadata,
-                                          rd_kafka_group_member_t *members,
-                                          int member_cnt,
-                                          char *errstr,
-                                          size_t errstr_size);
+rd_kafka_resp_err_t
+rd_kafka_assignor_run(struct rd_kafka_cgrp_s *rkcg,
+                      const rd_kafka_assignor_t *rkas,
+                      rd_kafka_metadata_t *metadata,
+                      rd_kafka_group_member_internal_t *members,
+                      int member_cnt,
+                      char *errstr,
+                      size_t errstr_size);
 
 rd_kafka_assignor_t *rd_kafka_assignor_find(rd_kafka_t *rk,
                                             const char *protocol);
@@ -238,7 +237,8 @@ void rd_kafka_assignors_term(rd_kafka_t *rk);
 
 
 
-void rd_kafka_group_member_clear(rd_kafka_group_member_t *rkgm);
+void rd_kafka_group_member_internal_clear(
+    rd_kafka_group_member_internal_t *rkgm);
 
 
 rd_kafka_resp_err_t rd_kafka_range_assignor_register(void);

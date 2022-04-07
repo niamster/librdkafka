@@ -1409,9 +1409,9 @@ rd_kafka_OffsetDeleteRequest(rd_kafka_broker_t *rkb,
  * @brief Write "consumer" protocol type MemberState for SyncGroupRequest to
  *        enveloping buffer \p rkbuf.
  */
-static void
-rd_kafka_group_MemberState_consumer_write(rd_kafka_buf_t *env_rkbuf,
-                                          const rd_kafka_group_member_t *rkgm) {
+static void rd_kafka_group_MemberState_consumer_write(
+    rd_kafka_buf_t *env_rkbuf,
+    const rd_kafka_group_member_internal_t *rkgm) {
         rd_kafka_buf_t *rkbuf;
         rd_slice_t slice;
 
@@ -1438,16 +1438,17 @@ rd_kafka_group_MemberState_consumer_write(rd_kafka_buf_t *env_rkbuf,
 /**
  * Send SyncGroupRequest
  */
-void rd_kafka_SyncGroupRequest(rd_kafka_broker_t *rkb,
-                               const rd_kafkap_str_t *group_id,
-                               int32_t generation_id,
-                               const rd_kafkap_str_t *member_id,
-                               const rd_kafkap_str_t *group_instance_id,
-                               const rd_kafka_group_member_t *assignments,
-                               int assignment_cnt,
-                               rd_kafka_replyq_t replyq,
-                               rd_kafka_resp_cb_t *resp_cb,
-                               void *opaque) {
+void rd_kafka_SyncGroupRequest(
+    rd_kafka_broker_t *rkb,
+    const rd_kafkap_str_t *group_id,
+    int32_t generation_id,
+    const rd_kafkap_str_t *member_id,
+    const rd_kafkap_str_t *group_instance_id,
+    const rd_kafka_group_member_internal_t *assignments,
+    int assignment_cnt,
+    rd_kafka_replyq_t replyq,
+    rd_kafka_resp_cb_t *resp_cb,
+    void *opaque) {
         rd_kafka_buf_t *rkbuf;
         int i;
         int16_t ApiVersion;
@@ -1471,7 +1472,7 @@ void rd_kafka_SyncGroupRequest(rd_kafka_broker_t *rkb,
         rd_kafka_buf_write_i32(rkbuf, assignment_cnt);
 
         for (i = 0; i < assignment_cnt; i++) {
-                const rd_kafka_group_member_t *rkgm = &assignments[i];
+                const rd_kafka_group_member_internal_t *rkgm = &assignments[i];
 
                 rd_kafka_buf_write_kstr(rkbuf, rkgm->rkgm_member_id);
                 rd_kafka_group_MemberState_consumer_write(rkbuf, rkgm);

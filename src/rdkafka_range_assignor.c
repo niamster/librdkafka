@@ -55,7 +55,7 @@ rd_kafka_range_assignor_assign_cb(rd_kafka_t *rk,
                                   void *opaque,
                                   const char *member_id,
                                   const rd_kafka_metadata_t *metadata,
-                                  rd_kafka_group_member_t *members,
+                                  rd_kafka_group_member_internal_t *members,
                                   size_t member_cnt,
                                   rd_kafka_assignor_topic_t *eligible_topics,
                                   size_t eligible_topic_cnt,
@@ -75,7 +75,7 @@ rd_kafka_range_assignor_assign_cb(rd_kafka_t *rk,
                  * numeric order and the consumers in lexicographic order. */
                 qsort(eligible_topic->members, eligible_topic->member_cnt,
                       sizeof(*eligible_topic->members),
-                      rd_kafka_group_member_cmp);
+                      rd_kafka_group_member_internal_cmp);
 
                 /* We then divide the number of partitions by the total number
                  * of consumers to determine the number of partitions to assign
@@ -98,7 +98,7 @@ rd_kafka_range_assignor_assign_cb(rd_kafka_t *rk,
                              eligible_topic->member_cnt);
 
                 for (i = 0; i < eligible_topic->member_cnt; i++) {
-                        rd_kafka_group_member_t *rkgm =
+                        rd_kafka_group_member_internal_t *rkgm =
                             &eligible_topic->members[i];
                         int start = numPartitionsPerConsumer * i +
                                     RD_MIN(i, consumersWithExtraPartition);
