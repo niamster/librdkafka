@@ -8342,10 +8342,12 @@ typedef struct rd_kafka_group_member_s {
         int rkgm_generation;
 } rd_kafka_group_member_t;
 
+RD_EXPORT
 int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
                                             const rd_kafka_group_member_t *rkgm,
                                             const char *topic);
 
+RD_EXPORT
 int rd_kafka_group_member_cmp(const void *_a, const void *_b);
 
 
@@ -8359,6 +8361,7 @@ typedef struct rd_kafka_assignor_topic_s {
         size_t member_cnt;
 } rd_kafka_assignor_topic_t;
 
+RD_EXPORT
 int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
 
 
@@ -8375,12 +8378,14 @@ typedef struct rd_kafka_member_userdata_serialized_s {
  * Initializes user matadata object.
  * Note: `data` argument can be NULL, in that case len should be 0.
  */
+RD_EXPORT
 rd_kafka_member_userdata_serialized_t *
 rd_kafka_member_userdata_serialized_new(const void *data, size_t len);
 
 /**
  * Destroys object created with `rd_kafka_member_userdata_serialized_new`
  */
+RD_EXPORT
 void rd_kafka_member_userdata_serialized_destroy(
     rd_kafka_member_userdata_serialized_t *mdata);
 
@@ -8399,6 +8404,7 @@ typedef rd_kafka_member_userdata_serialized_t *(*rkas_get_user_metadata_cb_t)(
  * @brief rd_kafka_assignor_get_empty_userdata is a helper function as a stub
  * callback if custom assignor does not provide any user data.
  */
+RD_EXPORT
 rd_kafka_member_userdata_serialized_t *rd_kafka_assignor_get_empty_userdata(
     void *opaque,
     const char *member_id,
@@ -8429,6 +8435,7 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
 /**
  * Register new assignor
  */
+RD_EXPORT
 rd_kafka_resp_err_t
 rd_kafka_assignor_register(const char *protocol_name,
                            rd_kafka_rebalance_protocol_t rebalance_protocol,
