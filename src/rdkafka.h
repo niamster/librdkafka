@@ -8321,6 +8321,34 @@ typedef enum rd_kafka_rebalance_protocol_t {
                                                      rebalance protocol*/
 } rd_kafka_rebalance_protocol_t;
 
+
+/**
+ * Custom user data associated with a given member and preserved in Kafka
+ * itself.
+ */
+typedef struct rd_kafka_member_userdata_serialized_s {
+        const void *data;
+        size_t len;
+} rd_kafka_member_userdata_serialized_t;
+
+
+/**
+ * Initializes user matadata object.
+ * Note: `data` argument can be NULL, in that case len should be 0.
+ */
+RD_EXPORT
+rd_kafka_member_userdata_serialized_t *
+rd_kafka_member_userdata_serialized_new(const void *data, size_t len);
+
+
+/**
+ * Destroys object created with `rd_kafka_member_userdata_serialized_new`
+ */
+RD_EXPORT
+void rd_kafka_member_userdata_serialized_destroy(
+    rd_kafka_member_userdata_serialized_t *mdata);
+
+
 /**
  * Represents a member of the assignment.
  */
@@ -8338,6 +8366,8 @@ typedef struct rd_kafka_group_member_s {
         const char *rkgm_member_id;
         /** Group instance id. */
         const char *rkgm_group_instance_id;
+        /** Member-specific opaque userdata. */
+        const rd_kafka_member_userdata_serialized_t *rkgm_userdata;
         /** Group generation id. */
         int rkgm_generation;
 } rd_kafka_group_member_t;
@@ -8363,31 +8393,6 @@ typedef struct rd_kafka_assignor_topic_s {
 
 RD_EXPORT
 int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
-
-
-/**
- * Custom user data associated with a given member and preserved in Kafka
- * itself.
- */
-typedef struct rd_kafka_member_userdata_serialized_s {
-        const void *data;
-        size_t len;
-} rd_kafka_member_userdata_serialized_t;
-
-/**
- * Initializes user matadata object.
- * Note: `data` argument can be NULL, in that case len should be 0.
- */
-RD_EXPORT
-rd_kafka_member_userdata_serialized_t *
-rd_kafka_member_userdata_serialized_new(const void *data, size_t len);
-
-/**
- * Destroys object created with `rd_kafka_member_userdata_serialized_new`
- */
-RD_EXPORT
-void rd_kafka_member_userdata_serialized_destroy(
-    rd_kafka_member_userdata_serialized_t *mdata);
 
 
 /**

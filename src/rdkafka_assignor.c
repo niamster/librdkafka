@@ -476,6 +476,16 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
                             RD_KAFKAP_STR_DUP(member_internal->rkgm_member_id);
                         member->rkgm_group_instance_id = RD_KAFKAP_STR_DUP(
                             member_internal->rkgm_group_instance_id);
+                        if (member_internal->rkgm_userdata != NULL) {
+                                member->rkgm_userdata =
+                                    rd_kafka_member_userdata_serialized_new(
+                                        member_internal->rkgm_userdata->data,
+                                        member_internal->rkgm_userdata->len);
+                        } else {
+                                member->rkgm_userdata =
+                                    rd_kafka_member_userdata_serialized_new(
+                                        NULL, 0);
+                        }
                         member->rkgm_generation =
                             member_internal->rkgm_generation;
                 }
@@ -497,6 +507,15 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
                     RD_KAFKAP_STR_DUP(member_internal->rkgm_member_id);
                 member->rkgm_group_instance_id =
                     RD_KAFKAP_STR_DUP(member_internal->rkgm_group_instance_id);
+                if (member_internal->rkgm_userdata != NULL) {
+                        member->rkgm_userdata =
+                            rd_kafka_member_userdata_serialized_new(
+                                member_internal->rkgm_userdata->data,
+                                member_internal->rkgm_userdata->len);
+                } else {
+                        member->rkgm_userdata =
+                            rd_kafka_member_userdata_serialized_new(NULL, 0);
+                }
                 member->rkgm_generation = member_internal->rkgm_generation;
         }
 
@@ -564,6 +583,9 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
 
                 rd_free((void *)member->rkgm_member_id);
                 rd_free((void *)member->rkgm_group_instance_id);
+                rd_kafka_member_userdata_serialized_destroy(
+                    (rd_kafka_member_userdata_serialized_t *)
+                        member->rkgm_userdata);
         }
         rd_free(members);
 
@@ -576,6 +598,9 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
 
                         rd_free((void *)member->rkgm_member_id);
                         rd_free((void *)member->rkgm_group_instance_id);
+                        rd_kafka_member_userdata_serialized_destroy(
+                            (rd_kafka_member_userdata_serialized_t *)
+                                member->rkgm_userdata);
                 }
                 rd_free(eligible_topic->members);
         }
