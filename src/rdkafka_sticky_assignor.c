@@ -1124,7 +1124,7 @@ static void balance(rd_kafka_t *rk,
  */
 static void prepopulateCurrentAssignments(
     rd_kafka_t *rk,
-    rd_kafka_group_member_internal_t *members,
+    rd_kafka_group_member_t *members,
     size_t member_cnt,
     map_str_toppar_list_t *subscriptions,
     map_str_toppar_list_t *currentAssignment,
@@ -1156,17 +1156,17 @@ static void prepopulateCurrentAssignments(
          * sortedPartitionConsumersByGeneration (which is sorted afterwards)
          * indexed by the partition. */
         for (i = 0; i < (int)member_cnt; i++) {
-                rd_kafka_group_member_internal_t *consumer = &members[i];
+                rd_kafka_group_member_t *consumer = &members[i];
                 int j;
 
-                RD_MAP_SET(subscriptions, consumer->rkgm_member_id->str,
+                RD_MAP_SET(subscriptions, consumer->rkgm_member_id,
                            consumer->rkgm_subscription);
 
-                RD_MAP_SET(currentAssignment, consumer->rkgm_member_id->str,
+                RD_MAP_SET(currentAssignment, consumer->rkgm_member_id,
                            rd_kafka_topic_partition_list_new(10));
 
                 RD_MAP_SET(consumer2AllPotentialPartitions,
-                           consumer->rkgm_member_id->str,
+                           consumer->rkgm_member_id,
                            rd_kafka_topic_partition_list_new(
                                (int)estimated_partition_cnt));
 
@@ -1184,28 +1184,27 @@ static void prepopulateCurrentAssignments(
                             rd_list_find(
                                 consumers, &consumer->rkgm_generation,
                                 ConsumerGenerationPair_cmp_generation)) {
-                                rd_kafka_log(
-                                    rk, LOG_WARNING, "STICKY",
-                                    "Sticky assignor: "
-                                    "%s [%" PRId32
-                                    "] is assigned to "
-                                    "multiple consumers with same "
-                                    "generation %d: "
-                                    "skipping member %.*s",
-                                    partition->topic, partition->partition,
-                                    consumer->rkgm_generation,
-                                    RD_KAFKAP_STR_PR(consumer->rkgm_member_id));
+                                rd_kafka_log(rk, LOG_WARNING, "STICKY",
+                                             "Sticky assignor: "
+                                             "%s [%" PRId32
+                                             "] is assigned to "
+                                             "multiple consumers with same "
+                                             "generation %d: "
+                                             "skipping member %s",
+                                             partition->topic,
+                                             partition->partition,
+                                             consumer->rkgm_generation,
+                                             consumer->rkgm_member_id);
                                 continue;
                         }
 
-                        rd_list_add(consumers,
-                                    ConsumerGenerationPair_new(
-                                        consumer->rkgm_member_id->str,
-                                        consumer->rkgm_generation));
+                        rd_list_add(consumers, ConsumerGenerationPair_new(
+                                                   consumer->rkgm_member_id,
+                                                   consumer->rkgm_generation));
 
                         RD_MAP_SET(currentPartitionConsumer,
                                    rd_kafka_topic_partition_copy(partition),
-                                   consumer->rkgm_member_id->str);
+                                   consumer->rkgm_member_id);
                 }
         }
 
@@ -1555,14 +1554,14 @@ sortPartitions(rd_kafka_t *rk,
  * @brief Transfer currentAssignment to members array.
  */
 static void assignToMembers(map_str_toppar_list_t *currentAssignment,
-                            rd_kafka_group_member_internal_t *members,
+                            rd_kafka_group_member_t *members,
                             size_t member_cnt) {
         size_t i;
 
         for (i = 0; i < member_cnt; i++) {
-                rd_kafka_group_member_internal_t *rkgm = &members[i];
+                rd_kafka_group_member_t *rkgm = &members[i];
                 const rd_kafka_topic_partition_list_t *partitions =
-                    RD_MAP_GET(currentAssignment, rkgm->rkgm_member_id->str);
+                    RD_MAP_GET(currentAssignment, rkgm->rkgm_member_id);
                 if (rkgm->rkgm_assignment)
                         rd_kafka_topic_partition_list_destroy(
                             rkgm->rkgm_assignment);
@@ -1582,7 +1581,7 @@ rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
                                    void *opaque,
                                    const char *member_id,
                                    const rd_kafka_metadata_t *metadata,
-                                   rd_kafka_group_member_internal_t *members,
+                                   rd_kafka_group_member_t *members,
                                    size_t member_cnt,
                                    rd_kafka_assignor_topic_t *eligible_topics,
                                    size_t eligible_topic_cnt,

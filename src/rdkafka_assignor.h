@@ -45,6 +45,36 @@ typedef enum rd_kafka_rebalance_protocol_t {
                                                      rebalance protocol*/
 } rd_kafka_rebalance_protocol_t;
 
+/**
+ * Represents a member of the assignment.
+ */
+typedef struct rd_kafka_group_member_s {
+        /** Subscribed topics (partition field is ignored). */
+        rd_kafka_topic_partition_list_t *rkgm_subscription;
+        /** Partitions assigned to this member after running the assignor.
+         *  E.g., the current assignment coming out of the rebalance. */
+        rd_kafka_topic_partition_list_t *rkgm_assignment;
+        /** Partitions reported as currently owned by the member, read
+         *  from consumer metadata. E.g., the current assignment going into
+         *  the rebalance. */
+        rd_kafka_topic_partition_list_t *rkgm_owned;
+        /** Member id (e.g., client.id-some-uuid). */
+        char *rkgm_member_id;
+        /** Group instance id. */
+        char *rkgm_group_instance_id;
+        /** Group generation id. */
+        int rkgm_generation;
+} rd_kafka_group_member_t;
+
+int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
+                                            const rd_kafka_group_member_t *rkgm,
+                                            const char *topic);
+
+int rd_kafka_group_member_cmp(const void *_a, const void *_b);
+
+/**
+ * Internal view of rd_kafka_group_member_t
+ */
 typedef struct rd_kafka_group_member_internal_s {
         /** Subscribed topics (partition field is ignored). */
         rd_kafka_topic_partition_list_t *rkgm_subscription;
@@ -115,7 +145,7 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
     void *opaque,
     const char *member_id,
     const rd_kafka_metadata_t *metadata,
-    rd_kafka_group_member_internal_t *members,
+    rd_kafka_group_member_t *members,
     size_t member_cnt,
     // The callback is free manipulating `eligible_topics` in any way,
     // it is not used by the caller but the resources are destroyed afterwards.
