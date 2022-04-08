@@ -32,20 +32,26 @@
 
 #include <ctype.h>
 
+static once_flag rd_kafka_assignor_global_registry_init_once = ONCE_FLAG_INIT;
 static mtx_t rd_kafka_assignor_global_registry_lock;
 static rd_list_t rd_kafka_assignor_global_registry;
 
 
-/**
- * @brief Initialize assignor registry
- */
-void rd_kafka_assignor_global_init(void) {
+static void rd_kafka_assignor_global_init0(void) {
         mtx_init(&rd_kafka_assignor_global_registry_lock, mtx_plain);
         rd_list_init(&rd_kafka_assignor_global_registry, 0, NULL);
 
         rd_kafka_range_assignor_register();
         rd_kafka_roundrobin_assignor_register();
         rd_kafka_sticky_assignor_register();
+}
+
+/**
+ * @brief Initialize assignor registry
+ */
+void rd_kafka_assignor_global_init(void) {
+        call_once(&rd_kafka_assignor_global_registry_init_once,
+                  rd_kafka_assignor_global_init0);
 }
 
 /**
@@ -774,6 +780,8 @@ rd_kafka_assignor_register(const char *protocol_name,
                            rd_kafka_rebalance_protocol_t rebalance_protocol,
                            rd_kafka_assignor_assign_cb_t assign_cb,
                            void *opaque) {
+        rd_kafka_assignor_global_init();
+
         return rd_kafka_assignor_register_internal(
             protocol_name, rebalance_protocol, assign_cb,
             rd_kafka_assignor_get_metadata_with_empty_userdata, NULL, NULL,
