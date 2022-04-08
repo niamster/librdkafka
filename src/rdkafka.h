@@ -8303,6 +8303,96 @@ rd_kafka_error_t *rd_kafka_abort_transaction(rd_kafka_t *rk, int timeout_ms);
 
 /**@}*/
 
+/**
+ * @name Custom Consumer Partition Assignor API
+ */
+
+/*!
+ * Enumerates the different rebalance protocol types.
+ *
+ * @sa rd_kafka_rebalance_protocol()
+ */
+typedef enum rd_kafka_rebalance_protocol_t {
+        RD_KAFKA_REBALANCE_PROTOCOL_NONE,       /**< Rebalance protocol is
+                                                     unknown */
+        RD_KAFKA_REBALANCE_PROTOCOL_EAGER,      /**< Eager rebalance
+                                                     protocol */
+        RD_KAFKA_REBALANCE_PROTOCOL_COOPERATIVE /**< Cooperative
+                                                     rebalance protocol*/
+} rd_kafka_rebalance_protocol_t;
+
+/**
+ * Represents a member of the assignment.
+ */
+typedef struct rd_kafka_group_member_s {
+        /** Subscribed topics (partition field is ignored). */
+        const rd_kafka_topic_partition_list_t *rkgm_subscription;
+        /** Partitions assigned to this member after running the assignor.
+         *  E.g., the current assignment coming out of the rebalance. */
+        rd_kafka_topic_partition_list_t *rkgm_assignment;
+        /** Partitions reported as currently owned by the member, read
+         *  from consumer metadata. E.g., the current assignment going into
+         *  the rebalance. */
+        const rd_kafka_topic_partition_list_t *rkgm_owned;
+        /** Member id (e.g., client.id-some-uuid). */
+        const char *rkgm_member_id;
+        /** Group instance id. */
+        const char *rkgm_group_instance_id;
+        /** Group generation id. */
+        int rkgm_generation;
+} rd_kafka_group_member_t;
+
+int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
+                                            const rd_kafka_group_member_t *rkgm,
+                                            const char *topic);
+
+int rd_kafka_group_member_cmp(const void *_a, const void *_b);
+
+
+/**
+ * Structure to hold metadata for a single topic and all its
+ * subscribing members.
+ */
+typedef struct rd_kafka_assignor_topic_s {
+        const rd_kafka_metadata_topic_t *metadata;
+        rd_kafka_group_member_t *members;
+        size_t member_cnt;
+} rd_kafka_assignor_topic_t;
+
+int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
+
+
+/**
+ * @brief rd_kafka_assignor_assign_cb_t is called to perform the group
+ * assignment given the member subscriptions and current cluster metadata. It
+ * does that by manipulating `members` argument.
+ */
+typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
+    rd_kafka_t *rk,
+    void *opaque,
+    const char *member_id,
+    const rd_kafka_metadata_t *metadata,
+    rd_kafka_group_member_t *members,
+    size_t member_cnt,
+    // The callback is free manipulating `eligible_topics` in any way,
+    // it is not used by the caller but the resources are destroyed afterwards.
+    rd_kafka_assignor_topic_t *eligible_topics,
+    size_t eligible_topic_cnt,
+    char *errstr,
+    size_t errstr_size);
+
+
+/**
+ * Register new assignor
+ */
+rd_kafka_resp_err_t
+rd_kafka_assignor_register(const char *protocol_name,
+                           rd_kafka_rebalance_protocol_t rebalance_protocol,
+                           rd_kafka_assignor_assign_cb_t assign_cb,
+                           void *opaque);
+
+/**@}*/
+
 /* @cond NO_DOC */
 #ifdef __cplusplus
 }
