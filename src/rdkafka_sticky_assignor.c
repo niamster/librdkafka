@@ -151,6 +151,9 @@ static int ConsumerGenerationPair_cmp_generation(const void *_a,
  * Where the keytype and valuetype are spoken names of the types and
  * not the specific C types (since that'd be too long).
  */
+typedef RD_MAP_TYPE(const char *, const rd_kafka_topic_partition_list_t *)
+    map_str_toppar_list_const_t;
+
 typedef RD_MAP_TYPE(const char *,
                     rd_kafka_topic_partition_list_t *) map_str_toppar_list_t;
 
@@ -1126,7 +1129,7 @@ static void prepopulateCurrentAssignments(
     rd_kafka_t *rk,
     rd_kafka_group_member_t *members,
     size_t member_cnt,
-    map_str_toppar_list_t *subscriptions,
+    map_str_toppar_list_const_t *subscriptions,
     map_str_toppar_list_t *currentAssignment,
     map_toppar_cgpair_t *prevAssignment,
     map_toppar_str_t *currentPartitionConsumer,
@@ -1590,7 +1593,7 @@ rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
         size_t partition_cnt = member_cnt * 10; /* FIXME */
 
         /* Map of subscriptions. This is \p member turned into a map. */
-        map_str_toppar_list_t subscriptions =
+        map_str_toppar_list_const_t subscriptions =
             RD_MAP_INITIALIZER(member_cnt, rd_map_str_cmp, rd_map_str_hash,
                                NULL /* refs members.rkgm_member_id */,
                                NULL /* refs members.rkgm_subscription */);

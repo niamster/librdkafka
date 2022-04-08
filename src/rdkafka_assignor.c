@@ -485,9 +485,12 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
                 rd_kafka_group_member_internal_t *member_internal =
                     &members_internal[i];
 
-                member_internal->rkgm_subscription = member->rkgm_subscription;
-                member_internal->rkgm_assignment   = member->rkgm_assignment;
-                member_internal->rkgm_owned        = member->rkgm_owned;
+                member_internal->rkgm_subscription =
+                    (rd_kafka_topic_partition_list_t *)
+                        member->rkgm_subscription;
+                member_internal->rkgm_assignment = member->rkgm_assignment;
+                member_internal->rkgm_owned =
+                    (rd_kafka_topic_partition_list_t *)member->rkgm_owned;
         }
 
         if (err) {
@@ -533,8 +536,8 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
         for (i = 0; i < member_cnt; i++) {
                 rd_kafka_group_member_t *member = &members[i];
 
-                rd_free(member->rkgm_member_id);
-                rd_free(member->rkgm_group_instance_id);
+                rd_free((void *)member->rkgm_member_id);
+                rd_free((void *)member->rkgm_group_instance_id);
         }
         rd_free(members);
 
@@ -545,8 +548,8 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
                         rd_kafka_group_member_t *member =
                             &eligible_topic->members[j];
 
-                        rd_free(member->rkgm_member_id);
-                        rd_free(member->rkgm_group_instance_id);
+                        rd_free((void *)member->rkgm_member_id);
+                        rd_free((void *)member->rkgm_group_instance_id);
                 }
                 rd_free(eligible_topic->members);
         }
