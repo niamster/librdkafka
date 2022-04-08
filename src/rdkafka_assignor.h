@@ -83,33 +83,34 @@ int rd_kafka_assignor_topic_internal_cmp(const void *_a, const void *_b);
  * Assignor callbacks
  */
 
+typedef struct rd_kafka_member_userdata_serialized_s {
+        const void *data;
+        size_t len;
+} rd_kafka_member_userdata_serialized_t;
+
+rd_kafka_member_userdata_serialized_t *
+rd_kafka_member_userdata_serialized_new(const void *data, size_t len);
+
+void rd_kafka_member_userdata_serialized_destroy(
+    rd_kafka_member_userdata_serialized_t *mdata);
+
+
 /**
- * @brief rkas_get_metadata_cb_t returns serialized member metadata.
+ * @brief rkas_get_user_metadata_cb_t returns serialized member user metadata.
  * See also `rd_kafka_consumer_protocol_member_metadata_new`.
  */
-typedef rd_kafkap_bytes_t *(*rkas_get_metadata_cb_t)(
+typedef rd_kafka_member_userdata_serialized_t *(*rkas_get_user_metadata_cb_t)(
     void *opaque,
-    void *assignor_state,
-    const rd_list_t *topics,
-    const rd_kafka_topic_partition_list_t *owned_partitions);
+    const char *member_id,
+    const rd_kafka_topic_partition_list_t *owned_partitions,
+    int32_t rkcg_generation_id);
 
 
-/**
- * @brief rkas_on_assignment_cb_t is invoked when a group member receives its
- * assignment from the leader.
- */
-typedef void (*rkas_on_assignment_cb_t)(
+rd_kafka_member_userdata_serialized_t *rd_kafka_assignor_get_empty_userdata(
     void *opaque,
-    void **assignor_state,
-    const rd_kafka_topic_partition_list_t *assignment,
-    const rd_kafkap_bytes_t *assignment_userdata,
-    const rd_kafka_consumer_group_metadata_t *rkcgm);
-
-/**
- * @brief rkas_destroy_state_cb_t is invoked to destroy the state object
- * allocated in `rkas_on_assignment_cb_t`.
- */
-typedef void (*rkas_destroy_state_cb_t)(void *assignor_state);
+    const char *member_id,
+    const rd_kafka_topic_partition_list_t *owned_partitions,
+    int32_t rkcg_generation_id);
 
 
 typedef struct rd_kafka_assignor_s {
@@ -121,9 +122,7 @@ typedef struct rd_kafka_assignor_s {
         rd_kafka_rebalance_protocol_t rkas_protocol;
 
         rd_kafka_assignor_assign_cb_t rkas_assign_cb;
-        rkas_get_metadata_cb_t rkas_get_metadata_cb;
-        rkas_on_assignment_cb_t rkas_on_assignment_cb;
-        rkas_destroy_state_cb_t rkas_destroy_state_cb;
+        rkas_get_user_metadata_cb_t rkas_get_user_metadata_cb;
 
         int (*rkas_unittest)(void);
 
@@ -135,9 +134,7 @@ rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
     const char *protocol_name,
     rd_kafka_rebalance_protocol_t rebalance_protocol,
     rd_kafka_assignor_assign_cb_t assign_cb,
-    rkas_get_metadata_cb_t get_metadata_cb,
-    rkas_on_assignment_cb_t on_assignment_cb,
-    rkas_destroy_state_cb_t destroy_state_cb,
+    rkas_get_user_metadata_cb_t get_user_metadata_cb,
     int (*unittest_cb)(void),
     void *opaque);
 
@@ -148,9 +145,7 @@ rd_kafka_assignor_add(rd_kafka_t *rk,
                       const char *protocol_name,
                       rd_kafka_rebalance_protocol_t rebalance_protocol,
                       rd_kafka_assignor_assign_cb_t assign_cb,
-                      rkas_get_metadata_cb_t get_metadata_cb,
-                      rkas_on_assignment_cb_t on_assignment_cb,
-                      rkas_destroy_state_cb_t destroy_state_cb,
+                      rkas_get_user_metadata_cb_t get_user_metadata_cb,
                       int (*unittest_cb)(void),
                       void *opaque);
 
@@ -158,12 +153,6 @@ rd_kafkap_bytes_t *rd_kafka_consumer_protocol_member_metadata_new(
     const rd_list_t *topics,
     const void *userdata,
     size_t userdata_size,
-    const rd_kafka_topic_partition_list_t *owned_partitions);
-
-rd_kafkap_bytes_t *rd_kafka_assignor_get_metadata_with_empty_userdata(
-    void *opaque,
-    void *assignor_state,
-    const rd_list_t *topics,
     const rd_kafka_topic_partition_list_t *owned_partitions);
 
 

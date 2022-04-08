@@ -49,14 +49,6 @@
  */
 
 
-/** @brief Assignor state from last rebalance */
-typedef struct rd_kafka_sticky_assignor_state_s {
-        rd_kafka_topic_partition_list_t *prev_assignment;
-        int32_t generation_id;
-} rd_kafka_sticky_assignor_state_t;
-
-
-
 /**
  * Auxilliary glue types
  */
@@ -1812,96 +1804,6 @@ rd_kafka_sticky_assignor_assign_cb(rd_kafka_t *rk,
 
 
 
-/** @brief FIXME docstring */
-static void rd_kafka_sticky_assignor_on_assignment_cb(
-    void *opaque,
-    void **assignor_state,
-    const rd_kafka_topic_partition_list_t *partitions,
-    const rd_kafkap_bytes_t *assignment_userdata,
-    const rd_kafka_consumer_group_metadata_t *rkcgm) {
-        rd_kafka_sticky_assignor_state_t *state =
-            (rd_kafka_sticky_assignor_state_t *)*assignor_state;
-
-        if (!state)
-                state = rd_calloc(1, sizeof(*state));
-        else
-                rd_kafka_topic_partition_list_destroy(state->prev_assignment);
-
-        state->prev_assignment = rd_kafka_topic_partition_list_copy(partitions);
-        state->generation_id   = rkcgm->generation_id;
-
-        *assignor_state = state;
-}
-
-/** @brief FIXME docstring */
-static rd_kafkap_bytes_t *rd_kafka_sticky_assignor_get_metadata(
-    void *opaque,
-    void *assignor_state,
-    const rd_list_t *topics,
-    const rd_kafka_topic_partition_list_t *owned_partitions) {
-        rd_kafka_sticky_assignor_state_t *state;
-        rd_kafka_buf_t *rkbuf;
-        rd_kafkap_bytes_t *metadata;
-        rd_kafkap_bytes_t *kbytes;
-        size_t len;
-
-        /*
-         * UserData (Version: 1) => [previous_assignment] generation
-         *   previous_assignment => topic [partitions]
-         *     topic => STRING
-         *     partitions => partition
-         *       partition => INT32
-         *   generation => INT32
-         *
-         * If there is no previous assignment, UserData is NULL.
-         */
-
-        if (!assignor_state) {
-                return rd_kafka_consumer_protocol_member_metadata_new(
-                    topics, NULL, 0, owned_partitions);
-        }
-
-        state = (rd_kafka_sticky_assignor_state_t *)assignor_state;
-
-        rkbuf = rd_kafka_buf_new(1, 100);
-        rd_assert(state->prev_assignment != NULL);
-        rd_kafka_buf_write_topic_partitions(
-            rkbuf, state->prev_assignment, rd_false /*skip invalid offsets*/,
-            rd_false /*any offset*/, rd_false /*write offsets*/,
-            rd_false /*write epoch*/, rd_false /*write metadata*/);
-        rd_kafka_buf_write_i32(rkbuf, state->generation_id);
-
-        /* Get binary buffer and allocate a new Kafka Bytes with a copy. */
-        rd_slice_init_full(&rkbuf->rkbuf_reader, &rkbuf->rkbuf_buf);
-        len    = rd_slice_remains(&rkbuf->rkbuf_reader);
-        kbytes = rd_kafkap_bytes_new(NULL, (int32_t)len);
-        rd_slice_read(&rkbuf->rkbuf_reader, (void *)kbytes->data, len);
-        rd_kafka_buf_destroy(rkbuf);
-
-        metadata = rd_kafka_consumer_protocol_member_metadata_new(
-            topics, kbytes->data, kbytes->len, owned_partitions);
-
-        rd_kafkap_bytes_destroy(kbytes);
-
-        return metadata;
-}
-
-
-/**
- * @brief Destroy assignor state
- */
-static void rd_kafka_sticky_assignor_state_destroy(void *assignor_state) {
-        rd_kafka_sticky_assignor_state_t *state =
-            (rd_kafka_sticky_assignor_state_t *)assignor_state;
-
-        rd_assert(assignor_state);
-
-        rd_kafka_topic_partition_list_destroy(state->prev_assignment);
-        rd_free(state);
-}
-
-
-
 /**
  * @name Sticky assignor unit tests
  *
@@ -3421,8 +3323,6 @@ rd_kafka_resp_err_t rd_kafka_sticky_assignor_register(void) {
         return rd_kafka_assignor_register_internal(
             "cooperative-sticky", RD_KAFKA_REBALANCE_PROTOCOL_COOPERATIVE,
             rd_kafka_sticky_assignor_assign_cb,
-            rd_kafka_sticky_assignor_get_metadata,
-            rd_kafka_sticky_assignor_on_assignment_cb,
-            rd_kafka_sticky_assignor_state_destroy,
+            rd_kafka_assignor_get_empty_userdata,
             rd_kafka_sticky_assignor_unittest, NULL);
 }

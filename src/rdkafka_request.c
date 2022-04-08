@@ -1535,15 +1535,25 @@ void rd_kafka_JoinGroupRequest(rd_kafka_broker_t *rkb,
         rd_kafka_buf_write_i32(rkbuf, rk->rk_conf.enabled_assignor_cnt);
 
         RD_LIST_FOREACH(rkas, &rk->rk_conf.partition_assignors, i) {
+                rd_kafka_member_userdata_serialized_t *member_userdata;
                 rd_kafkap_bytes_t *member_metadata;
+                char *member_id_str;
+
                 if (!rkas->rkas_enabled)
                         continue;
+                RD_KAFKAP_STR_DUPA(&member_id_str, member_id);
                 rd_kafka_buf_write_kstr(rkbuf, rkas->rkas_protocol_name);
-                member_metadata = rkas->rkas_get_metadata_cb(
-                    rkas->rkas_opaque, rk->rk_cgrp->rkcg_assignor_state, topics,
-                    rk->rk_cgrp->rkcg_group_assignment);
+                member_userdata = rkas->rkas_get_user_metadata_cb(
+                    rkas->rkas_opaque, member_id_str,
+                    rk->rk_cgrp->rkcg_group_assignment,
+                    rk->rk_cgrp->rkcg_generation_id);
+                member_metadata =
+                    rd_kafka_consumer_protocol_member_metadata_new(
+                        topics, member_userdata->data, member_userdata->len,
+                        rk->rk_cgrp->rkcg_group_assignment);
                 rd_kafka_buf_write_kbytes(rkbuf, member_metadata);
                 rd_kafkap_bytes_destroy(member_metadata);
+                rd_kafka_member_userdata_serialized_destroy(member_userdata);
         }
 
         rd_kafka_buf_ApiVersion_set(rkbuf, ApiVersion, 0);

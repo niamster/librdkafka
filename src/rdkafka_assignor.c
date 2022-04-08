@@ -232,13 +232,33 @@ rd_kafkap_bytes_t *rd_kafka_consumer_protocol_member_metadata_new(
 
 
 
-rd_kafkap_bytes_t *rd_kafka_assignor_get_metadata_with_empty_userdata(
+rd_kafka_member_userdata_serialized_t *rd_kafka_assignor_get_empty_userdata(
     void *opaque,
-    void *assignor_state,
-    const rd_list_t *topics,
-    const rd_kafka_topic_partition_list_t *owned_partitions) {
-        return rd_kafka_consumer_protocol_member_metadata_new(topics, NULL, 0,
-                                                              owned_partitions);
+    const char *member_id,
+    const rd_kafka_topic_partition_list_t *owned_partitions,
+    int32_t rkcg_generation_id) {
+        return rd_kafka_member_userdata_serialized_new(NULL, 0);
+}
+
+
+rd_kafka_member_userdata_serialized_t *
+rd_kafka_member_userdata_serialized_new(const void *data, size_t len) {
+        rd_kafka_member_userdata_serialized_t *mdata;
+        mdata       = rd_malloc(sizeof(*mdata) + len);
+        mdata->data = (void *)(mdata + 1);
+        if (data == NULL) {
+                mdata->data = NULL;
+        } else {
+                memcpy((void *)mdata->data, data, len);
+        }
+        mdata->len = len;
+        return mdata;
+}
+
+
+void rd_kafka_member_userdata_serialized_destroy(
+    rd_kafka_member_userdata_serialized_t *mdata) {
+        rd_free(mdata);
 }
 
 
@@ -635,9 +655,7 @@ rd_kafka_assignor_add(rd_kafka_t *rk,
                       const char *protocol_name,
                       rd_kafka_rebalance_protocol_t rebalance_protocol,
                       rd_kafka_assignor_assign_cb_t assign_cb,
-                      rkas_get_metadata_cb_t get_metadata_cb,
-                      rkas_on_assignment_cb_t on_assignment_cb,
-                      rkas_destroy_state_cb_t destroy_state_cb,
+                      rkas_get_user_metadata_cb_t get_user_metadata_cb,
                       int (*unittest_cb)(void),
                       void *opaque) {
         rd_kafka_assignor_t *rkas;
@@ -656,15 +674,13 @@ rd_kafka_assignor_add(rd_kafka_t *rk,
 
         rkas = rd_calloc(1, sizeof(*rkas));
 
-        rkas->rkas_protocol_name    = rd_kafkap_str_new(protocol_name, -1);
-        rkas->rkas_protocol_type    = rd_kafkap_str_new(protocol_type, -1);
-        rkas->rkas_protocol         = rebalance_protocol;
-        rkas->rkas_assign_cb        = assign_cb;
-        rkas->rkas_get_metadata_cb  = get_metadata_cb;
-        rkas->rkas_on_assignment_cb = on_assignment_cb;
-        rkas->rkas_destroy_state_cb = destroy_state_cb;
-        rkas->rkas_unittest         = unittest_cb;
-        rkas->rkas_opaque           = opaque;
+        rkas->rkas_protocol_name        = rd_kafkap_str_new(protocol_name, -1);
+        rkas->rkas_protocol_type        = rd_kafkap_str_new(protocol_type, -1);
+        rkas->rkas_protocol             = rebalance_protocol;
+        rkas->rkas_assign_cb            = assign_cb;
+        rkas->rkas_get_user_metadata_cb = get_user_metadata_cb;
+        rkas->rkas_unittest             = unittest_cb;
+        rkas->rkas_opaque               = opaque;
 
         rd_list_add(&rk->rk_conf.partition_assignors, rkas);
 
@@ -693,12 +709,11 @@ static void rd_kafka_assignors_init_registered(rd_kafka_t *rk) {
 
         mtx_lock(&rd_kafka_assignor_global_registry_lock);
         RD_LIST_FOREACH(rkas, &rd_kafka_assignor_global_registry, i) {
-                rd_kafka_assignor_add(
-                    rk, rkas->rkas_protocol_type->str,
-                    rkas->rkas_protocol_name->str, rkas->rkas_protocol,
-                    rkas->rkas_assign_cb, rkas->rkas_get_metadata_cb,
-                    rkas->rkas_on_assignment_cb, rkas->rkas_destroy_state_cb,
-                    rkas->rkas_unittest, rkas->rkas_opaque);
+                rd_kafka_assignor_add(rk, rkas->rkas_protocol_type->str,
+                                      rkas->rkas_protocol_name->str,
+                                      rkas->rkas_protocol, rkas->rkas_assign_cb,
+                                      rkas->rkas_get_user_metadata_cb,
+                                      rkas->rkas_unittest, rkas->rkas_opaque);
         }
         mtx_unlock(&rd_kafka_assignor_global_registry_lock);
 }
@@ -786,8 +801,7 @@ rd_kafka_assignor_register(const char *protocol_name,
 
         return rd_kafka_assignor_register_internal(
             protocol_name, rebalance_protocol, assign_cb,
-            rd_kafka_assignor_get_metadata_with_empty_userdata, NULL, NULL,
-            NULL, opaque);
+            rd_kafka_assignor_get_empty_userdata, NULL, opaque);
 }
 
 
@@ -795,9 +809,7 @@ rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
     const char *protocol_name,
     rd_kafka_rebalance_protocol_t rebalance_protocol,
     rd_kafka_assignor_assign_cb_t assign_cb,
-    rkas_get_metadata_cb_t get_metadata_cb,
-    rkas_on_assignment_cb_t on_assignment_cb,
-    rkas_destroy_state_cb_t destroy_state_cb,
+    rkas_get_user_metadata_cb_t get_user_metadata_cb,
     int (*unittest_cb)(void),
     void *opaque) {
         if (rebalance_protocol != RD_KAFKA_REBALANCE_PROTOCOL_COOPERATIVE &&
@@ -816,15 +828,13 @@ rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
 
         rkas = rd_calloc(1, sizeof(*rkas));
 
-        rkas->rkas_protocol_name    = rd_kafkap_str_new(protocol_name, -1);
-        rkas->rkas_protocol_type    = rd_kafkap_str_new("consumer", -1);
-        rkas->rkas_protocol         = rebalance_protocol;
-        rkas->rkas_assign_cb        = assign_cb;
-        rkas->rkas_get_metadata_cb  = get_metadata_cb;
-        rkas->rkas_on_assignment_cb = on_assignment_cb;
-        rkas->rkas_destroy_state_cb = destroy_state_cb;
-        rkas->rkas_unittest         = unittest_cb;
-        rkas->rkas_opaque           = opaque;
+        rkas->rkas_protocol_name        = rd_kafkap_str_new(protocol_name, -1);
+        rkas->rkas_protocol_type        = rd_kafkap_str_new("consumer", -1);
+        rkas->rkas_protocol             = rebalance_protocol;
+        rkas->rkas_assign_cb            = assign_cb;
+        rkas->rkas_get_user_metadata_cb = get_user_metadata_cb;
+        rkas->rkas_unittest             = unittest_cb;
+        rkas->rkas_opaque               = opaque;
 
         rd_list_add(&rd_kafka_assignor_global_registry, rkas);
 

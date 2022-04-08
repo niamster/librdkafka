@@ -369,9 +369,6 @@ void rd_kafka_cgrp_destroy_final(rd_kafka_cgrp_t *rkcg) {
         rd_list_destroy(&rkcg->rkcg_toppars);
         rd_list_destroy(rkcg->rkcg_subscribed_topics);
         rd_kafka_topic_partition_list_destroy(rkcg->rkcg_errored_topics);
-        if (rkcg->rkcg_assignor && rkcg->rkcg_assignor->rkas_destroy_state_cb)
-                rkcg->rkcg_assignor->rkas_destroy_state_cb(
-                    rkcg->rkcg_assignor_state);
         rd_free(rkcg);
 }
 
@@ -1512,21 +1509,6 @@ static void rd_kafka_cgrp_handle_SyncGroup_memberstate(
 done:
         rd_kafka_cgrp_update_session_timeout(rkcg, rd_true /*reset timeout*/);
 
-        rd_assert(rkcg->rkcg_assignor);
-        if (rkcg->rkcg_assignor->rkas_on_assignment_cb) {
-                char *member_id;
-                RD_KAFKAP_STR_DUPA(&member_id, rkcg->rkcg_member_id);
-                rd_kafka_consumer_group_metadata_t *cgmd =
-                    rd_kafka_consumer_group_metadata_new_with_genid(
-                        rkcg->rkcg_rk->rk_conf.group_id_str,
-                        rkcg->rkcg_generation_id, member_id,
-                        rkcg->rkcg_rk->rk_conf.group_instance_id);
-                rkcg->rkcg_assignor->rkas_on_assignment_cb(
-                    rkcg->rkcg_assignor->rkas_opaque,
-                    &(rkcg->rkcg_assignor_state), assignment, &UserData, cgmd);
-                rd_kafka_consumer_group_metadata_destroy(cgmd);
-        }
-
         // FIXME: Remove when we're done debugging.
         rd_kafka_topic_partition_list_log(rkcg->rkcg_rk, "ASSIGNMENT",
                                           RD_KAFKA_DBG_CGRP, assignment);
@@ -1893,12 +1875,7 @@ static void rd_kafka_cgrp_handle_JoinGroup(rd_kafka_t *rk,
                                      "Unsupported assignment strategy \"%s\"",
                                      protocol_name);
                         if (rkcg->rkcg_assignor) {
-                                if (rkcg->rkcg_assignor->rkas_destroy_state_cb)
-                                        rkcg->rkcg_assignor
-                                            ->rkas_destroy_state_cb(
-                                                rkcg->rkcg_assignor_state);
-                                rkcg->rkcg_assignor_state = NULL;
-                                rkcg->rkcg_assignor       = NULL;
+                                rkcg->rkcg_assignor = NULL;
                         }
                         ErrorCode = RD_KAFKA_RESP_ERR__UNKNOWN_PROTOCOL;
                 }
@@ -1930,12 +1907,6 @@ static void rd_kafka_cgrp_handle_JoinGroup(rd_kafka_t *rk,
                 goto err;
         }
 
-        if (rkcg->rkcg_assignor && rkcg->rkcg_assignor != rkas) {
-                if (rkcg->rkcg_assignor->rkas_destroy_state_cb)
-                        rkcg->rkcg_assignor->rkas_destroy_state_cb(
-                            rkcg->rkcg_assignor_state);
-                rkcg->rkcg_assignor_state = NULL;
-        }
         rkcg->rkcg_assignor = rkas;
 
         if (i_am_leader) {
