@@ -691,6 +691,7 @@ static void rd_kafka_assignors_init_registered(rd_kafka_t *rk) {
         rd_kafka_assignor_t *rkas;
         int i;
 
+        mtx_lock(&rd_kafka_assignor_global_registry_lock);
         RD_LIST_FOREACH(rkas, &rd_kafka_assignor_global_registry, i) {
                 rd_kafka_assignor_add(
                     rk, rkas->rkas_protocol_type->str,
@@ -699,6 +700,7 @@ static void rd_kafka_assignors_init_registered(rd_kafka_t *rk) {
                     rkas->rkas_on_assignment_cb, rkas->rkas_destroy_state_cb,
                     rkas->rkas_unittest, rkas->rkas_opaque);
         }
+        mtx_unlock(&rd_kafka_assignor_global_registry_lock);
 }
 
 
