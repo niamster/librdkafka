@@ -8,6 +8,8 @@ producer
 producer_cpp
 consumer
 idempotent_producer
+misc
+openssl_engine_example_cpp
 rdkafka_consume_batch
 transactions
 delete_records
