@@ -8363,6 +8363,50 @@ int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
 
 
 /**
+ * Custom user data associated with a given member and preserved in Kafka
+ * itself.
+ */
+typedef struct rd_kafka_member_userdata_serialized_s {
+        const void *data;
+        size_t len;
+} rd_kafka_member_userdata_serialized_t;
+
+/**
+ * Initializes user matadata object.
+ * Note: `data` argument can be NULL, in that case len should be 0.
+ */
+rd_kafka_member_userdata_serialized_t *
+rd_kafka_member_userdata_serialized_new(const void *data, size_t len);
+
+/**
+ * Destroys object created with `rd_kafka_member_userdata_serialized_new`
+ */
+void rd_kafka_member_userdata_serialized_destroy(
+    rd_kafka_member_userdata_serialized_t *mdata);
+
+
+/**
+ * @brief rkas_get_user_metadata_cb_t returns serialized member user metadata.
+ */
+typedef rd_kafka_member_userdata_serialized_t *(*rkas_get_user_metadata_cb_t)(
+    void *opaque,
+    const char *member_id,
+    const rd_kafka_topic_partition_list_t *owned_partitions,
+    int32_t generation_id);
+
+
+/**
+ * @brief rd_kafka_assignor_get_empty_userdata is a helper function as a stub
+ * callback if custom assignor does not provide any user data.
+ */
+rd_kafka_member_userdata_serialized_t *rd_kafka_assignor_get_empty_userdata(
+    void *opaque,
+    const char *member_id,
+    const rd_kafka_topic_partition_list_t *owned_partitions,
+    int32_t generation_id);
+
+
+/**
  * @brief rd_kafka_assignor_assign_cb_t is called to perform the group
  * assignment given the member subscriptions and current cluster metadata. It
  * does that by manipulating `members` argument.
@@ -8389,6 +8433,7 @@ rd_kafka_resp_err_t
 rd_kafka_assignor_register(const char *protocol_name,
                            rd_kafka_rebalance_protocol_t rebalance_protocol,
                            rd_kafka_assignor_assign_cb_t assign_cb,
+                           rkas_get_user_metadata_cb_t get_user_metadata_cb,
                            void *opaque);
 
 /**@}*/

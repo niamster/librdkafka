@@ -796,12 +796,13 @@ rd_kafka_resp_err_t
 rd_kafka_assignor_register(const char *protocol_name,
                            rd_kafka_rebalance_protocol_t rebalance_protocol,
                            rd_kafka_assignor_assign_cb_t assign_cb,
+                           rkas_get_user_metadata_cb_t get_user_metadata_cb,
                            void *opaque) {
         rd_kafka_assignor_global_init();
 
         return rd_kafka_assignor_register_internal(
-            protocol_name, rebalance_protocol, assign_cb,
-            rd_kafka_assignor_get_empty_userdata, NULL, opaque);
+            protocol_name, rebalance_protocol, assign_cb, get_user_metadata_cb,
+            NULL, opaque);
 }
 
 

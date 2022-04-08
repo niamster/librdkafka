@@ -79,39 +79,6 @@ typedef struct rd_kafka_assignor_topic_internal_s {
 
 int rd_kafka_assignor_topic_internal_cmp(const void *_a, const void *_b);
 
-/**
- * Assignor callbacks
- */
-
-typedef struct rd_kafka_member_userdata_serialized_s {
-        const void *data;
-        size_t len;
-} rd_kafka_member_userdata_serialized_t;
-
-rd_kafka_member_userdata_serialized_t *
-rd_kafka_member_userdata_serialized_new(const void *data, size_t len);
-
-void rd_kafka_member_userdata_serialized_destroy(
-    rd_kafka_member_userdata_serialized_t *mdata);
-
-
-/**
- * @brief rkas_get_user_metadata_cb_t returns serialized member user metadata.
- * See also `rd_kafka_consumer_protocol_member_metadata_new`.
- */
-typedef rd_kafka_member_userdata_serialized_t *(*rkas_get_user_metadata_cb_t)(
-    void *opaque,
-    const char *member_id,
-    const rd_kafka_topic_partition_list_t *owned_partitions,
-    int32_t rkcg_generation_id);
-
-
-rd_kafka_member_userdata_serialized_t *rd_kafka_assignor_get_empty_userdata(
-    void *opaque,
-    const char *member_id,
-    const rd_kafka_topic_partition_list_t *owned_partitions,
-    int32_t rkcg_generation_id);
-
 
 typedef struct rd_kafka_assignor_s {
         rd_kafkap_str_t *rkas_protocol_type;
