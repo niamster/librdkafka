@@ -1262,9 +1262,8 @@ populatePotentialMaps(const rd_kafka_assignor_topic_t *atopic,
          */
 
         for (i = 0; i < atopic->member_cnt; i++) {
-                const rd_kafka_group_member_internal_t *rkgm =
-                    &atopic->members[i];
-                const char *consumer = rkgm->rkgm_member_id->str;
+                const rd_kafka_group_member_t *rkgm = &atopic->members[i];
+                const char *consumer                = rkgm->rkgm_member_id;
                 rd_kafka_topic_partition_list_t *partitions =
                     RD_MAP_GET(consumer2AllPotentialPartitions, consumer);
                 int j;

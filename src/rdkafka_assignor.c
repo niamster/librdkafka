@@ -438,7 +438,20 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
                 rd_kafka_group_member_internal_t *member_internal;
                 RD_LIST_FOREACH(member_internal,
                                 &eligible_topic_internal->members, j) {
-                        eligible_topic->members[j] = *member_internal;
+                        rd_kafka_group_member_t *member =
+                            &eligible_topic->members[j];
+
+                        member->rkgm_subscription =
+                            member_internal->rkgm_subscription;
+                        member->rkgm_assignment =
+                            member_internal->rkgm_assignment;
+                        member->rkgm_owned = member_internal->rkgm_owned;
+                        member->rkgm_member_id =
+                            RD_KAFKAP_STR_DUP(member_internal->rkgm_member_id);
+                        member->rkgm_group_instance_id = RD_KAFKAP_STR_DUP(
+                            member_internal->rkgm_group_instance_id);
+                        member->rkgm_generation =
+                            member_internal->rkgm_generation;
                 }
                 eligible_topic->member_cnt =
                     rd_list_cnt(&eligible_topic_internal->members);
@@ -527,6 +540,14 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
 
         for (i = 0; i < rd_list_cnt(&eligible_topics_internal); i++) {
                 rd_kafka_assignor_topic_t *eligible_topic = &eligible_topics[i];
+
+                for (j = 0; j < (int)eligible_topic->member_cnt; j++) {
+                        rd_kafka_group_member_t *member =
+                            &eligible_topic->members[j];
+
+                        rd_free(member->rkgm_member_id);
+                        rd_free(member->rkgm_group_instance_id);
+                }
                 rd_free(eligible_topic->members);
         }
         rd_free(eligible_topics);

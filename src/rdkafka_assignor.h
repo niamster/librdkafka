@@ -114,7 +114,7 @@ int rd_kafka_group_member_internal_find_subscription(
  */
 typedef struct rd_kafka_assignor_topic_s {
         const rd_kafka_metadata_topic_t *metadata;
-        rd_kafka_group_member_internal_t *members;
+        rd_kafka_group_member_t *members;
         size_t member_cnt;
 } rd_kafka_assignor_topic_t;
 
