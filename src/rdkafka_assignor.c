@@ -639,15 +639,15 @@ rd_kafka_assignor_rebalance_protocol_check(const rd_kafka_conf_t *conf) {
 /**
  * @brief Add an assignor.
  */
-rd_kafka_resp_err_t
-rd_kafka_assignor_add(rd_kafka_t *rk,
-                      const char *protocol_type,
-                      const char *protocol_name,
-                      rd_kafka_rebalance_protocol_t rebalance_protocol,
-                      rd_kafka_assignor_assign_cb_t assign_cb,
-                      rkas_get_user_metadata_cb_t get_user_metadata_cb,
-                      int (*unittest_cb)(void),
-                      void *opaque) {
+rd_kafka_resp_err_t rd_kafka_assignor_add(
+    rd_kafka_t *rk,
+    const char *protocol_type,
+    const char *protocol_name,
+    rd_kafka_rebalance_protocol_t rebalance_protocol,
+    rd_kafka_assignor_assign_cb_t assign_cb,
+    rd_kafka_assignor_get_user_metadata_cb_t get_user_metadata_cb,
+    int (*unittest_cb)(void),
+    void *opaque) {
         rd_kafka_assignor_t *rkas;
 
         if (rd_kafkap_str_cmp_str(rk->rk_conf.group_protocol_type,
@@ -782,12 +782,12 @@ void rd_kafka_assignors_term(rd_kafka_t *rk) {
 }
 
 
-rd_kafka_resp_err_t
-rd_kafka_assignor_register(const char *protocol_name,
-                           rd_kafka_rebalance_protocol_t rebalance_protocol,
-                           rd_kafka_assignor_assign_cb_t assign_cb,
-                           rkas_get_user_metadata_cb_t get_user_metadata_cb,
-                           void *opaque) {
+rd_kafka_resp_err_t rd_kafka_assignor_register(
+    const char *protocol_name,
+    rd_kafka_rebalance_protocol_t rebalance_protocol,
+    rd_kafka_assignor_assign_cb_t assign_cb,
+    rd_kafka_assignor_get_user_metadata_cb_t get_user_metadata_cb,
+    void *opaque) {
         rd_kafka_assignor_global_init();
 
         return rd_kafka_assignor_register_internal(
@@ -800,7 +800,7 @@ rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
     const char *protocol_name,
     rd_kafka_rebalance_protocol_t rebalance_protocol,
     rd_kafka_assignor_assign_cb_t assign_cb,
-    rkas_get_user_metadata_cb_t get_user_metadata_cb,
+    rd_kafka_assignor_get_user_metadata_cb_t get_user_metadata_cb,
     int (*unittest_cb)(void),
     void *opaque) {
         if (rebalance_protocol != RD_KAFKA_REBALANCE_PROTOCOL_COOPERATIVE &&

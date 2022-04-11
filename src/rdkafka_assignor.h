@@ -87,7 +87,7 @@ typedef struct rd_kafka_assignor_s {
         rd_kafka_rebalance_protocol_t rkas_protocol;
 
         rd_kafka_assignor_assign_cb_t rkas_assign_cb;
-        rkas_get_user_metadata_cb_t rkas_get_user_metadata_cb;
+        rd_kafka_assignor_get_user_metadata_cb_t rkas_get_user_metadata_cb;
 
         int (*rkas_unittest)(void);
 
@@ -99,20 +99,20 @@ rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
     const char *protocol_name,
     rd_kafka_rebalance_protocol_t rebalance_protocol,
     rd_kafka_assignor_assign_cb_t assign_cb,
-    rkas_get_user_metadata_cb_t get_user_metadata_cb,
+    rd_kafka_assignor_get_user_metadata_cb_t get_user_metadata_cb,
     int (*unittest_cb)(void),
     void *opaque);
 
 
-rd_kafka_resp_err_t
-rd_kafka_assignor_add(rd_kafka_t *rk,
-                      const char *protocol_type,
-                      const char *protocol_name,
-                      rd_kafka_rebalance_protocol_t rebalance_protocol,
-                      rd_kafka_assignor_assign_cb_t assign_cb,
-                      rkas_get_user_metadata_cb_t get_user_metadata_cb,
-                      int (*unittest_cb)(void),
-                      void *opaque);
+rd_kafka_resp_err_t rd_kafka_assignor_add(
+    rd_kafka_t *rk,
+    const char *protocol_type,
+    const char *protocol_name,
+    rd_kafka_rebalance_protocol_t rebalance_protocol,
+    rd_kafka_assignor_assign_cb_t assign_cb,
+    rd_kafka_assignor_get_user_metadata_cb_t get_user_metadata_cb,
+    int (*unittest_cb)(void),
+    void *opaque);
 
 rd_kafkap_bytes_t *rd_kafka_consumer_protocol_member_metadata_new(
     const rd_list_t *topics,
