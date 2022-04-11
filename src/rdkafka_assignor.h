@@ -62,11 +62,11 @@ typedef struct rd_kafka_group_member_internal_s {
 
 int rd_kafka_group_member_internal_cmp(const void *_a, const void *_b);
 
-int rd_kafka_group_member_internal_find_subscription(
-    rd_kafka_t *rk,
-    const rd_kafka_group_member_internal_t *rkgm,
-    const char *topic);
+int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
+                                            const rd_kafka_group_member_t *rkgm,
+                                            const char *topic);
 
+int rd_kafka_group_member_cmp(const void *_a, const void *_b);
 
 /**
  * Internal view of rd_kafka_assignor_topic_t
@@ -76,9 +76,7 @@ typedef struct rd_kafka_assignor_topic_internal_s {
         rd_list_t members; /* rd_kafka_group_member_internal_t * */
 } rd_kafka_assignor_topic_internal_t;
 
-
-int rd_kafka_assignor_topic_internal_cmp(const void *_a, const void *_b);
-
+int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
 
 typedef struct rd_kafka_assignor_s {
         rd_kafkap_str_t *rkas_protocol_type;

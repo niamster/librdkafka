@@ -69,6 +69,19 @@ static int is_printable(const char *buf, size_t size) {
         return 1;
 }
 
+static int rd_kafka_group_member_cmp(const void *_a, const void *_b) {
+        const rd_kafka_group_member_t *a = (const rd_kafka_group_member_t *)_a;
+        const rd_kafka_group_member_t *b = (const rd_kafka_group_member_t *)_b;
+
+        /* Use the group instance id to compare static group members */
+        if (a->rkgm_group_instance_id != NULL &&
+            b->rkgm_group_instance_id != NULL)
+                return strcmp(a->rkgm_group_instance_id,
+                              b->rkgm_group_instance_id);
+
+        return strcmp(a->rkgm_member_id, b->rkgm_member_id);
+}
+
 static rd_kafka_resp_err_t
 rd_kafka_custom_assignor_assign_cb(rd_kafka_t *rk,
                                    void *opaque,

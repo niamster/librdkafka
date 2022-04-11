@@ -125,32 +125,6 @@ int rd_kafka_group_member_cmp(const void *_a, const void *_b) {
 /**
  * Returns true if member subscribes to topic, else false.
  */
-int rd_kafka_group_member_internal_find_subscription(
-    rd_kafka_t *rk,
-    const rd_kafka_group_member_internal_t *rkgm,
-    const char *topic) {
-        int i;
-
-        /* Match against member's subscription. */
-        for (i = 0; i < rkgm->rkgm_subscription->cnt; i++) {
-                const rd_kafka_topic_partition_t *rktpar =
-                    &rkgm->rkgm_subscription->elems[i];
-
-                char *member_id;
-                RD_KAFKAP_STR_DUPA(&member_id, rkgm->rkgm_member_id);
-
-                if (rd_kafka_topic_partition_match(rk, member_id, rktpar, topic,
-                                                   NULL))
-                        return 1;
-        }
-
-        return 0;
-}
-
-
-/**
- * Returns true if member subscribes to topic, else false.
- */
 int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
                                             const rd_kafka_group_member_t *rkgm,
                                             const char *topic) {
@@ -309,15 +283,6 @@ static void rd_kafka_assignor_topic_internal_destroy(
     rd_kafka_assignor_topic_internal_t *at) {
         rd_list_destroy(&at->members);
         rd_free(at);
-}
-
-int rd_kafka_assignor_topic_internal_cmp(const void *_a, const void *_b) {
-        const rd_kafka_assignor_topic_internal_t *a =
-            *(const rd_kafka_assignor_topic_internal_t *const *)_a;
-        const rd_kafka_assignor_topic_internal_t *b =
-            *(const rd_kafka_assignor_topic_internal_t *const *)_b;
-
-        return strcmp(a->metadata->topic, b->metadata->topic);
 }
 
 int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b) {

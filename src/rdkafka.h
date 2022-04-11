@@ -8372,14 +8372,6 @@ typedef struct rd_kafka_group_member_s {
         int rkgm_generation;
 } rd_kafka_group_member_t;
 
-RD_EXPORT
-int rd_kafka_group_member_find_subscription(rd_kafka_t *rk,
-                                            const rd_kafka_group_member_t *rkgm,
-                                            const char *topic);
-
-RD_EXPORT
-int rd_kafka_group_member_cmp(const void *_a, const void *_b);
-
 
 /**
  * Structure to hold metadata for a single topic and all its
@@ -8390,9 +8382,6 @@ typedef struct rd_kafka_assignor_topic_s {
         rd_kafka_group_member_t *members;
         size_t member_cnt;
 } rd_kafka_assignor_topic_t;
-
-RD_EXPORT
-int rd_kafka_assignor_topic_cmp(const void *_a, const void *_b);
 
 
 /**
