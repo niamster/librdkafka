@@ -3322,7 +3322,6 @@ static int rd_kafka_sticky_assignor_unittest(void) {
 rd_kafka_resp_err_t rd_kafka_sticky_assignor_register(void) {
         return rd_kafka_assignor_register_internal(
             "cooperative-sticky", RD_KAFKA_REBALANCE_PROTOCOL_COOPERATIVE,
-            rd_kafka_sticky_assignor_assign_cb,
-            rd_kafka_assignor_get_empty_userdata,
+            rd_kafka_sticky_assignor_assign_cb, NULL,
             rd_kafka_sticky_assignor_unittest, NULL);
 }

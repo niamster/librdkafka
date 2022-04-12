@@ -8398,21 +8398,11 @@ typedef struct rd_kafka_group_member_s {
  * @param member_id Name of the member ID.
  * @param owned_partitions List of partitions the member is subscribed to.
  * @parama generation_id Consumer group generation ID.
+ *
+ * @remark It may return NULL if there's nothing to persist.
  */
 typedef rd_kafka_member_userdata_serialized_t *(
     *rd_kafka_assignor_get_user_metadata_cb_t)(
-    void *opaque,
-    const char *member_id,
-    const rd_kafka_topic_partition_list_t *owned_partitions,
-    int32_t generation_id);
-
-
-/**
- * @brief rd_kafka_assignor_get_empty_userdata is a helper function as a stub
- * callback if custom assignor does not provide any user data.
- */
-RD_EXPORT
-rd_kafka_member_userdata_serialized_t *rd_kafka_assignor_get_empty_userdata(
     void *opaque,
     const char *member_id,
     const rd_kafka_topic_partition_list_t *owned_partitions,
@@ -8477,7 +8467,7 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
  * rd_kafka_rebalance_protocol_t
  * @param assign_cb Callback that decides consumer group assignment.
  * @param get_user_metadata_cb Callback that generates consumer group member
- * user data.
+ * user data. It is an optional parameter and can be NULL.
  * @param opaque An opaque data passed to the assignor callbacks.
  */
 RD_EXPORT

@@ -1535,7 +1535,7 @@ void rd_kafka_JoinGroupRequest(rd_kafka_broker_t *rkb,
         rd_kafka_buf_write_i32(rkbuf, rk->rk_conf.enabled_assignor_cnt);
 
         RD_LIST_FOREACH(rkas, &rk->rk_conf.partition_assignors, i) {
-                rd_kafka_member_userdata_serialized_t *member_userdata;
+                rd_kafka_member_userdata_serialized_t *member_userdata = NULL;
                 rd_kafkap_bytes_t *member_metadata;
                 char *member_id_str;
 
@@ -1543,10 +1543,16 @@ void rd_kafka_JoinGroupRequest(rd_kafka_broker_t *rkb,
                         continue;
                 RD_KAFKAP_STR_DUPA(&member_id_str, member_id);
                 rd_kafka_buf_write_kstr(rkbuf, rkas->rkas_protocol_name);
-                member_userdata = rkas->rkas_get_user_metadata_cb(
-                    rkas->rkas_opaque, member_id_str,
-                    rk->rk_cgrp->rkcg_group_assignment,
-                    rk->rk_cgrp->rkcg_generation_id);
+                if (rkas->rkas_get_user_metadata_cb != NULL) {
+                        member_userdata = rkas->rkas_get_user_metadata_cb(
+                            rkas->rkas_opaque, member_id_str,
+                            rk->rk_cgrp->rkcg_group_assignment,
+                            rk->rk_cgrp->rkcg_generation_id);
+                }
+                if (member_userdata == NULL) {
+                        member_userdata =
+                            rd_kafka_member_userdata_serialized_new(NULL, 0);
+                }
                 member_metadata =
                     rd_kafka_consumer_protocol_member_metadata_new(
                         topics, member_userdata->data, member_userdata->len,

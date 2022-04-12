@@ -133,6 +133,5 @@ rd_kafka_range_assignor_assign_cb(rd_kafka_t *rk,
 rd_kafka_resp_err_t rd_kafka_range_assignor_register(void) {
         return rd_kafka_assignor_register_internal(
             "range", RD_KAFKA_REBALANCE_PROTOCOL_EAGER,
-            rd_kafka_range_assignor_assign_cb,
-            rd_kafka_assignor_get_empty_userdata, NULL, NULL);
+            rd_kafka_range_assignor_assign_cb, NULL, NULL, NULL);
 }

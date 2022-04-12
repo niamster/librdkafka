@@ -205,16 +205,6 @@ rd_kafkap_bytes_t *rd_kafka_consumer_protocol_member_metadata_new(
 }
 
 
-
-rd_kafka_member_userdata_serialized_t *rd_kafka_assignor_get_empty_userdata(
-    void *opaque,
-    const char *member_id,
-    const rd_kafka_topic_partition_list_t *owned_partitions,
-    int32_t rkcg_generation_id) {
-        return rd_kafka_member_userdata_serialized_new(NULL, 0);
-}
-
-
 rd_kafka_member_userdata_serialized_t *
 rd_kafka_member_userdata_serialized_new(const void *data, size_t len) {
         rd_kafka_member_userdata_serialized_t *mdata;
