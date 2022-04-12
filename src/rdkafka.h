@@ -8450,11 +8450,11 @@ typedef rd_kafka_resp_err_t (*rd_kafka_assignor_assign_cb_t)(
     rd_kafka_assignor_topic_t *eligible_topics,
     /** Number of elements in \p eligible_topics. */
     size_t eligible_topic_cnt,
-    /** @param A human readable error string (nul-terminated) is written to
+    /** A human readable error string (nul-terminated) is written to
      * this location (only written to if there is a fatal error).
      */
     char *errstr,
-    /** @errstr_size Writable size in \p errstr. */
+    /** Writable size in \p errstr. */
     size_t errstr_size);
 
 
