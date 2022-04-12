@@ -8397,7 +8397,7 @@ typedef struct rd_kafka_group_member_s {
  * @param opaque Opaque data passed to rd_kafka_assignor_register().
  * @param member_id Name of the member ID.
  * @param owned_partitions List of partitions the member is subscribed to.
- * @parama generation_id Consumer group generation ID.
+ * @param generation_id Consumer group generation ID.
  *
  * @remark It may return NULL if there's nothing to persist.
  */
