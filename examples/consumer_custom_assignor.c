@@ -73,11 +73,11 @@ static int rd_kafka_group_member_cmp(const void *_a, const void *_b) {
         const rd_kafka_group_member_t *a = (const rd_kafka_group_member_t *)_a;
         const rd_kafka_group_member_t *b = (const rd_kafka_group_member_t *)_b;
 
-        /* Use the group instance id to compare static group members */
-        if (a->rkgm_group_instance_id != NULL &&
-            b->rkgm_group_instance_id != NULL)
-                return strcmp(a->rkgm_group_instance_id,
-                              b->rkgm_group_instance_id);
+        int res = strcmp(a->rkgm_userdata->data, b->rkgm_userdata->data);
+
+        if (res != 0) {
+                return res;
+        }
 
         return strcmp(a->rkgm_member_id, b->rkgm_member_id);
 }
@@ -108,40 +108,29 @@ rd_kafka_custom_assignor_assign_cb(rd_kafka_t *rk,
                 return RD_KAFKA_RESP_ERR__INVALID_ARG;
         }
 
-        /* Sort members by name */
         qsort(members, member_cnt, sizeof(*members), rd_kafka_group_member_cmp);
 
-        size_t mindex    = 0;
-        const char *prio = members[0].rkgm_userdata->data;
-        size_t i;
-        for (i = 1; i < member_cnt; i++) {
-                if (strcmp(prio, members[i].rkgm_userdata->data) == -1) {
-                        prio   = members[i].rkgm_userdata->data;
-                        mindex = i;
-                }
-        }
+        /* Take member with the highest priority. */
+        rd_kafka_group_member_t *member = &members[0];
 
-        /* For each topic+partition, assign one member (in a cyclic
-         * iteration) per partition until the partitions are exhausted.
+        /* Assign all eligible partitions of a given topic.
          */
         int p;
         for (p = 0; p < eligible_topic->metadata->partition_cnt; p++) {
                 int32_t partition = eligible_topic->metadata->partitions[p].id;
 
-                rd_kafka_group_member_t *rkgm = &members[mindex];
-
                 fprintf(stderr,
                         "Member \"%s\"%s: "
                         "assigned topic %s partition %d (metadata: %.*s)\n",
-                        rkgm->rkgm_member_id,
-                        strcmp(member_id, rkgm->rkgm_member_id) == 0 ? " (me)"
-                                                                     : "",
+                        member->rkgm_member_id,
+                        strcmp(member_id, member->rkgm_member_id) == 0 ? " (me)"
+                                                                       : "",
                         eligible_topic->metadata->topic, partition,
-                        (int)rkgm->rkgm_userdata->len - 1,
-                        (char *)rkgm->rkgm_userdata->data);
+                        (int)member->rkgm_userdata->len - 1,
+                        (char *)member->rkgm_userdata->data);
 
                 rd_kafka_topic_partition_list_add(
-                    rkgm->rkgm_assignment, eligible_topic->metadata->topic,
+                    member->rkgm_assignment, eligible_topic->metadata->topic,
                     partition);
         }
 
@@ -186,6 +175,9 @@ int main(int argc, char **argv) {
         topic   = argv[3];
         prio    = argv[4];
 
+        /*
+         * Register custom assigned
+         */
         err = rd_kafka_assignor_register(
             "custom", RD_KAFKA_REBALANCE_PROTOCOL_EAGER,
             rd_kafka_custom_assignor_assign_cb,
@@ -248,7 +240,7 @@ int main(int argc, char **argv) {
                 }
         }
 
-        /* Set "static" assignor registered above.
+        /* Set assignor registered above.
          */
         if (rd_kafka_conf_set(conf, "partition.assignment.strategy", "custom",
                               errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
