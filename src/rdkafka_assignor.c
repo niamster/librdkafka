@@ -797,6 +797,10 @@ rd_kafka_resp_err_t rd_kafka_assignor_register_internal(
             rebalance_protocol != RD_KAFKA_REBALANCE_PROTOCOL_EAGER)
                 return RD_KAFKA_RESP_ERR__UNKNOWN_PROTOCOL;
 
+        if (assign_cb == NULL) {
+                return RD_KAFKA_RESP_ERR__INVALID_ARG;
+        }
+
         mtx_lock(&rd_kafka_assignor_global_registry_lock);
 
         if ((rd_list_find(&rd_kafka_assignor_global_registry, protocol_name,
