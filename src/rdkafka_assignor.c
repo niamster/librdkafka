@@ -480,17 +480,23 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
             metadata, members, member_cnt, eligible_topics,
             eligible_topics_internal.rl_cnt, errstr, errstr_size);
 
+        /* Recover assignment (member->rkgm_assignment) for the caller.
+         * NOTE: members array might have been manipulated, we can't rely on
+         * order */
         for (i = 0; i < member_cnt; i++) {
                 rd_kafka_group_member_t *member = &members[i];
-                rd_kafka_group_member_internal_t *member_internal =
-                    &members_internal[i];
-
-                member_internal->rkgm_subscription =
-                    (rd_kafka_topic_partition_list_t *)
-                        member->rkgm_subscription;
-                member_internal->rkgm_assignment = member->rkgm_assignment;
-                member_internal->rkgm_owned =
-                    (rd_kafka_topic_partition_list_t *)member->rkgm_owned;
+                for (j = 0; j < member_cnt; j++) {
+                        rd_kafka_group_member_internal_t *member_internal =
+                            &members_internal[j];
+                        char *member_id;
+                        RD_KAFKAP_STR_DUPA(&member_id,
+                                           member_internal->rkgm_member_id);
+                        if (strcmp(member->rkgm_member_id, member_id) == 0) {
+                                member_internal->rkgm_assignment =
+                                    member->rkgm_assignment;
+                                break;
+                        }
+                }
         }
 
         if (err) {
