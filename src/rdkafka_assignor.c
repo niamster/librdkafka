@@ -429,8 +429,13 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
                         member->rkgm_owned = member_internal->rkgm_owned;
                         member->rkgm_member_id =
                             RD_KAFKAP_STR_DUP(member_internal->rkgm_member_id);
-                        member->rkgm_group_instance_id = RD_KAFKAP_STR_DUP(
-                            member_internal->rkgm_group_instance_id);
+                        if (!RD_KAFKAP_STR_IS_NULL(
+                                member_internal->rkgm_group_instance_id)) {
+                                member->rkgm_group_instance_id =
+                                    RD_KAFKAP_STR_DUP(
+                                        member_internal
+                                            ->rkgm_group_instance_id);
+                        }
                         if (member_internal->rkgm_userdata != NULL) {
                                 member->rkgm_userdata =
                                     rd_kafka_member_userdata_serialized_new(
@@ -460,8 +465,11 @@ rd_kafka_assignor_run(rd_kafka_cgrp_t *rkcg,
                 member->rkgm_owned        = member_internal->rkgm_owned;
                 member->rkgm_member_id =
                     RD_KAFKAP_STR_DUP(member_internal->rkgm_member_id);
-                member->rkgm_group_instance_id =
-                    RD_KAFKAP_STR_DUP(member_internal->rkgm_group_instance_id);
+                if (!RD_KAFKAP_STR_IS_NULL(
+                        member_internal->rkgm_group_instance_id)) {
+                        member->rkgm_group_instance_id = RD_KAFKAP_STR_DUP(
+                            member_internal->rkgm_group_instance_id);
+                }
                 if (member_internal->rkgm_userdata != NULL) {
                         member->rkgm_userdata =
                             rd_kafka_member_userdata_serialized_new(
